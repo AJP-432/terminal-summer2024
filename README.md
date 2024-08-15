@@ -1,2 +1,2 @@
-# terminal-summer2024
-My repo for the Citadel Terminal Summer 2024 Inivitational!
+# Gabe's Citadel Terminal 2024 Summer Invitational Algos
+## Portfolio: https://gabep.dev
