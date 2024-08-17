@@ -5,6 +5,8 @@ import warnings
 from sys import maxsize
 import json
 
+from simulator import Simulator
+
 
 """
 Most of the algo code you write will be in this file unless you create new
@@ -43,6 +45,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         SP = 0
         # This is a good place to do initial setup
         self.scored_on_locations = []
+        self.last_action_frame = ""
 
     def on_turn(self, turn_state):
         """
@@ -53,11 +56,22 @@ class AlgoStrategy(gamelib.AlgoCore):
         game engine.
         """
         game_state = gamelib.GameState(self.config, turn_state)
+        if game_state.turn_number == 3:
+            gamelib.debug_write("Printing last action frame:", isinstance(self.last_action_frame, str))
+            with open("game_state.txt", "a") as f:
+                f.write(self.last_action_frame)
+                
+        moves = [
+            
+        ]
+        
+
         game_state.attempt_spawn(DEMOLISHER, [24, 10], 3) 
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
         self.starter_strategy(game_state)
+        
 
         game_state.submit_turn()
 
@@ -74,6 +88,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         For offense we will use long range demolishers if they place stationary units near the enemy's front.
         If there are no stationary units to attack in the front, we will send Scouts to try and score quickly.
         """
+        # TODO: pass it a list of moves to simulate
+        sim_results = self.simulate([])
+
+
         # First, place basic defenses
         self.build_defences(game_state)
         # Now build reactive defenses based on where the enemy scored
@@ -219,6 +237,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         Processing the action frames is complicated so we only suggest it if you have time and experience.
         Full doc on format of a game frame at in json-docs.html in the root of the Starterkit.
         """
+        self.last_action_frame = turn_string
         # Let's record at what position we get scored on
         state = json.loads(turn_string)
         events = state["events"]
@@ -232,6 +251,18 @@ class AlgoStrategy(gamelib.AlgoCore):
                 gamelib.debug_write("Got scored on at: {}".format(location))
                 self.scored_on_locations.append(location)
                 gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+        
+    # tests format: 
+        # [
+        #   {
+        #       "p1Units": [[8 for each type following unit stats (in docs)] ...],
+        #       "p2Units": [[8 for each type following unit stats (in docs)] ...],
+        #   }
+        #  ...
+        # ]
+    def simulate(self, tests):
+        sim = Simulator(self.config, self.last_action_frame, tests)
+        return sim.get_results()
 
 
 if __name__ == "__main__":
