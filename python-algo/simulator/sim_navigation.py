@@ -2,7 +2,14 @@ import heapq
 import math
 import sys
 import queue
-from gamelib.util import *
+def get_command():
+    return
+
+def send_command(cmd):
+    return
+
+def debug_write(*msg):
+    return
 
 class SimNode:
     """A path-finding node

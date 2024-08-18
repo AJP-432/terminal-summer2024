@@ -1,6 +1,7 @@
 # from game import *
 from .sim_game_state import SimGameState
 from typing import List
+import json
 
 # Format of test: 
         # {
@@ -8,10 +9,10 @@ from typing import List
         #   "p2Units": [WALL, SUPPORT, TURRET, SCOUT, DEMOLISHER, INTERCEPTOR, REMOVE, UPGRADE]
         # }
 class Simulator: 
-    def __init__(self, config, game_state_string, tests):
+    def __init__(self, config, game_state_string, tests_string):
         self.config = config
         self.serialized_string = game_state_string #last action frame
-        self.tests = tests # units to place
+        self.tests = json.loads(tests_string) # array of tests
 
         global WALL, SUPPORT, TURRET, SCOUT, DEMOLISHER, INTERCEPTOR
         WALL = config["unitInformation"][0]["shorthand"]
@@ -23,11 +24,17 @@ class Simulator:
 
         self.game_state = None
         self.simulation_results = []
-        self.run_simulations()
 
-    def get_results(self):
+    def get_results(self) -> list[str]:
         return self.simulation_results
     
+    """
+    An individual test is of the format: 
+        {
+            "p1Units": [WALL, SUPPORT, TURRET, SCOUT, DEMOLISHER, INTERCEPTOR, REMOVE, UPGRADE],
+            "p2Units": [WALL, SUPPORT, TURRET, SCOUT, DEMOLISHER, INTERCEPTOR, REMOVE, UPGRADE]
+        }
+    """
     def run_simulations(self):
         # run each individual simulation
         for test in self.tests:
@@ -35,7 +42,7 @@ class Simulator:
             res = self.simulation_loop()
             self.simulation_results.append(res)
             
-    def simulation_loop(self, move) -> dict[str, List[float]]:
+    def simulation_loop(self) -> dict[str, List[float]]:
         """Having loaded game state, run simulation loop
 
         Returns:
@@ -43,12 +50,13 @@ class Simulator:
         """ 
         frame_count = -1
         # Action Phase
-        while True: 
+        is_round_over = False
+        while not is_round_over: 
             frame_count += 1
             # Round ends when no more walkers
             walkers = self.game_state.get_walkers()
             if len(walkers) == 0:
-                break
+                is_round_over = True
 
             # Give shields:
             for support in self.game_state.get_supports(): 
@@ -169,5 +177,9 @@ class Simulator:
                     self.game_state.game_map[unit.x, unit.y] = []
                 else: 
                     self.game_state.game_map[unit.x, unit.y][unit.player_index].remove(unit)
+                    self.game_state.walkers.remove(unit)
+                
+                if unit.unit_type in [TURRET, SCOUT, DEMOLISHER, INTERCEPTOR]:
+                    self.game_state.fighters.remove(unit)
                 
         return self.game_state.get_summary()

@@ -138,16 +138,16 @@ class GameState:
                 x, y = map(int, [sx, sy])
                 hp = float(shp)
                 # This depends on RM and UP always being the last types to be processed
-                # if unit_type == REMOVE:
-                #     # Quick fix will deploy engine fix soon
-                #     if self.contains_stationary_unit([x,y]):
-                #         self.game_map[x,y].pending_removal = True
-                # elif unit_type == UPGRADE:
-                #     if self.contains_stationary_unit([x,y]):
-                #         self.game_map[x,y].upgrade()
-                if unit_type != REMOVE and unit_type != UPGRADE:
+                if unit_type == REMOVE:
+                    # Quick fix will deploy engine fix soon
+                    if self.contains_stationary_unit([x,y]):
+                        self.game_map[x,y][0].pending_removal = True
+                elif unit_type == UPGRADE:
+                    if self.contains_stationary_unit([x,y]):
+                        self.game_map[x,y][0].upgrade()
+                else:
                     unit = GameUnit(unit_type, self.config, player_number, hp, x, y)
-                    self.game_map[x,y].add(unit)
+                    self.game_map[x,y].append(unit)
 
     def __resource_required(self, unit_type):
         return self.SP if is_stationary(unit_type) else self.MP

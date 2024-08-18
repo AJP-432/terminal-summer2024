@@ -5,7 +5,7 @@ import warnings
 from sys import maxsize
 import json
 
-from simulator import Simulator
+from simulator.main import Simulator
 
 
 """
@@ -56,20 +56,16 @@ class AlgoStrategy(gamelib.AlgoCore):
         game engine.
         """
         game_state = gamelib.GameState(self.config, turn_state)
-        if game_state.turn_number == 3:
-            gamelib.debug_write("Printing last action frame:", isinstance(self.last_action_frame, str))
-            with open("game_state.txt", "a") as f:
-                f.write(self.last_action_frame)
-                
+                       
+        max_scouts = game_state.number_affordable(SCOUT)
         # gen test to run for sim and regular game
-        test = self.generate_sim_scout_moves(10, 13, 0, SCOUT)
+        test = self.generate_sim_scout_moves(max_scouts, 13, 0, SCOUT)
         # 
-        game_state.attempt_spawn(SCOUT, [13, 0], 10)
-        sim_results = self.simulate(test)
+        game_state.attempt_spawn(SCOUT, [13, 0], max_scouts)
+
+        tests = [json.dumps(test)]
+        sim_results = self.simulate(tests)
         self.test_sim()
-
-
-        
 
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
@@ -78,10 +74,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         
         game_state.submit_turn()
 
-
+    # just for testing purposes
     def test_sim(self):
-        with open("tests_to_compare.json", "a") as file:
-            json.dump(self.last_action_frame, file)
+        with open("official_result.txt", "a") as file:
+            file.write(self.last_action_frame)
 
 
     def test_defense(self, game_state):
@@ -290,16 +286,38 @@ class AlgoStrategy(gamelib.AlgoCore):
                 gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
         
     # tests format: 
-        # [
-        #   {
-        #       "p1Units": [[8 for each type following unit stats (in docs)] ...],
-        #       "p2Units": [[8 for each type following unit stats (in docs)] ...],
-        #   }
-        #  ...
-        # ]
-    def simulate(self, tests):
-        sim = Simulator(self.config, self.last_action_frame, tests)
-        return sim.get_results()
+    #     [
+    #       {
+    #           "p1Units": [[8 for each type following unit stats (in docs)] ...],
+    #           "p2Units": [[8 for each type following unit stats (in docs)] ...],
+    #       }
+    #       ... rest of tests
+    #     ]
+    def simulate(self, tests: list[str]):
+        if self.last_action_frame == "":
+            return []
+        
+        last_action_frame_json = json.loads(self.last_action_frame)
+        
+        for event in ["selfDestruct", "breach", "damage", "shield", "move", "spawn", "death", "attack", "melee"]:
+            last_action_frame_json[event] = []
+        
+        # gamelib.debug_write(last_action_frame_json)
+        with open("config.txt", "a") as f:
+            f.write(json.dumps(self.config))
+            
+        last_action_frame_string = json.dumps(last_action_frame_json)
+        tests_string = json.dumps(tests)
+        
+        sim = Simulator(self.config, last_action_frame_string, tests_string)
+        sim.run_simulations()
+        res = sim.get_results()
+
+        # res format: List[json strings of {p1Stats, p2Stats, p1Units, p2Units}] 
+        with open("sim_results.txt", "a") as f:
+            f.write(res[0])    
+        
+        return res
 
 
 if __name__ == "__main__":

@@ -6,6 +6,10 @@ from .sim_navigation import SimShortestPathFinder
 from .sim_unit import SimGameUnit
 from .sim_game_map import SimGameMap
 
+def my_print(s):
+    with open("log.txt", "w") as f: 
+        f.write(s)
+
 def is_stationary(unit_type):
     """
         Args:
@@ -43,10 +47,9 @@ class SimGameState:
         * my_time (int): The time you took to submit your previous turn
         * enemy_health (int): Your opponents current remaining health
         * enemy_time (int): Your opponents current remaining time
-
     """
 
-    def __init__(self, config, serialized_string, test_string):
+    def __init__(self, config, serialized_string, test):
         """ Setup a turns variables using arguments passed
 
         Args:
@@ -55,7 +58,6 @@ class SimGameState:
 
         """
         self.serialized_string = serialized_string
-        self.test_string = test_string
         self.config = config
         self.enable_warnings = True
 
@@ -98,15 +100,17 @@ class SimGameState:
         self._player_resources = [
                 {'SP': 0, 'MP': 0},  # player 0, which is you
                 {'SP': 0, 'MP': 0}]  # player 1, which is the opponent
-        self.__parse_state(serialized_string, test_string)
+        self.__parse_state(serialized_string, test)
 
-    def __parse_state(self, state_line, test_string):
+    def __parse_state(self, state_line, test):
         """
         Fills in map based on the serialized game state so that self.game_map[x,y] is a list of GameUnits at that location.
         state_line is the game state as a json string.
         """
+        
+            
         state = json.loads(state_line)
-        test = json.loads(test_string)
+        test = json.loads(test)
 
         turn_info = state["turnInfo"]
         self.turn_number = int(turn_info[1])

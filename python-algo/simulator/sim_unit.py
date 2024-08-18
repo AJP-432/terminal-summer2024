@@ -1,5 +1,4 @@
 from queue import Queue
-from main import WALL, TOWER, SUPPORT, WALKER, BASE
 
 def is_stationary(unit_type, structure_types):
     """

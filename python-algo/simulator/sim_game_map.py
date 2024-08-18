@@ -1,6 +1,6 @@
 import math
-from sim_unit import SimGameUnit
-from gamelib.util import debug_write
+from .sim_unit import SimGameUnit
+# from gamelib.util import debug_write
 from typing import Literal
 
 class SimGameMap:
@@ -235,7 +235,8 @@ class SimGameMap:
         Used internally by game_map to print out default messaging
         """
         if(self.enable_warnings):
-            debug_write(message)
+            # debug_write(message)
+            pass
 
     def distance_to_closest_edge(self, location):
         i, j = location

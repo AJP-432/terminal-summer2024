@@ -1,0 +1,6 @@
+replays/
+python-algo/simulator/__pycache__/
+python-algo/gamelib/__pycache__/
+V1/
+*.json
+*.txt
