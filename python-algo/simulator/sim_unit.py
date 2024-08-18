@@ -1,3 +1,6 @@
+from queue import Queue
+from main import WALL, TOWER, SUPPORT, WALKER, BASE
+
 def is_stationary(unit_type, structure_types):
     """
         Args:
@@ -32,7 +35,7 @@ class SimGameUnit:
         * upgraded (boolean): If this unit is upgraded
 
     """
-    def __init__(self, unit_type, config, player_index=None, health=None, x=-1, y=-1):
+    def __init__(self, unit_type, config, player_index=None, health=None, x=-1, y=-1, target_edge=None):
         """ Initialize unit variables using args passed
 
         """
@@ -45,6 +48,10 @@ class SimGameUnit:
         self.y = y
         self.__serialize_type()
         self.health = self.max_health if not health else health
+        self.given_shield = set() # used only for support, we keep track of which units have been given shield
+        self.path = Queue() # used only for walkers, we keep track of the path the walker will take
+        self.target_edge = target_edge # used only for walkers, we keep track of the edge the walker is targeting
+
 
     def __serialize_type(self):
         from .sim_game_state import STRUCTURE_TYPES, UNIT_TYPE_TO_INDEX, SUPPORT
@@ -86,4 +93,12 @@ class SimGameUnit:
 
     def __repr__(self):
         return self.__toString()
+
+    def set_path(self, path):
+        self.path.queue.clear()
+        for step in path: 
+            self.path.put(step)
+        
+    def next_step(self):
+        return tuple(self.path.get())
 

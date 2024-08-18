@@ -61,21 +61,58 @@ class AlgoStrategy(gamelib.AlgoCore):
             with open("game_state.txt", "a") as f:
                 f.write(self.last_action_frame)
                 
-        moves = [
-            
-        ]
+        # gen test to run for sim and regular game
+        test = self.generate_sim_scout_moves(10, 13, 0, SCOUT)
+        # 
+        game_state.attempt_spawn(SCOUT, [13, 0], 10)
+        sim_results = self.simulate(test)
+        self.test_sim()
+
+
         
 
-        game_state.attempt_spawn(DEMOLISHER, [24, 10], 3) 
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
-        self.starter_strategy(game_state)
+       # self.starter_strategy(game_state)
         
-
         game_state.submit_turn()
 
 
+    def test_sim(self):
+        with open("tests_to_compare.json", "a") as file:
+            json.dump(self.last_action_frame, file)
+
+
+    def test_defense(self, game_state):
+        game_state.attempt_spawn
+
+
+    def generate_sim_scout_moves(self, count, x, y, unit_type, player_index=0):
+        p1Units = [[] for _ in range(8)]
+        p2Units = [[] for _ in range(8)]
+        if player_index == 0:
+            p1Scouts = []
+            p1Demos = []
+            for _ in range(count):
+                if unit_type == SCOUT:
+                    p1Scouts.append([x, y, 12, ""])
+                elif unit_type == DEMOLISHER:
+                    p1Demos.append([x, y, 5, ""])
+            p1Units[3] = p1Scouts
+            p1Units[4] = p1Demos
+        elif player_index == 1:
+            p2Scouts = []
+            p2Demos = []
+            for _ in range(count):
+                if unit_type == SCOUT:
+                    p2Scouts.append([x, y, 12, ""])
+                elif unit_type == DEMOLISHER:
+                    p2Demos.append([x, y, 5, ""])
+            p2Units[3] = p2Scouts
+            p2Units[4] = p2Demos
+        test = {"p1Units": p1Units, "p2Units": p2Units}
+        return test
     """
     NOTE: All the methods after this point are part of the sample starter-algo
     strategy and can safely be replaced for your custom algo.

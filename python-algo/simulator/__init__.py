@@ -20,6 +20,10 @@ util.py contains a small handful of functions that help with communication, incl
 """
 
 from .main import Simulator
+from .sim_game_state import SimGameState
+from .sim_unit import SimGameUnit   
+from .sim_game_map import SimGameMap
+from .sim_navigation import SimNavigation
 
-__all__ = ["simulator"]
+__all__ = ["simulator", "sim_game_state", "sim_game_map", "sim_navigation", "sim_unit"]
  

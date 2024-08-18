@@ -1,6 +1,7 @@
 import math
-from .sim_unit import SimGameUnit
+from sim_unit import SimGameUnit
 from gamelib.util import debug_write
+from typing import Literal
 
 class SimGameMap:
     """Holds data about the current game map and provides functions
@@ -68,12 +69,7 @@ class SimGameMap:
         return location 
 
     def __empty_grid(self):
-        grid = []
-        for x in range(0, self.ARENA_SIZE):
-            grid.append([])
-            for _ in range(0, self.ARENA_SIZE):
-                grid[x].append([])
-        return grid
+        return [[[] for _ in range(self.ARENA_SIZE)] for _ in range(self.ARENA_SIZE)]
 
     def _invalid_coordinates(self, location):
         self.warn("{} is out of bounds.".format(str(location)))
@@ -167,11 +163,13 @@ class SimGameMap:
             self.warn("Player index {} is invalid. Player index should be 0 or 1.".format(player_index))
 
         x, y = location
-        new_unit =SimGameUnit(unit_type, self.config, player_index, None, location[0], location[1])
+        new_unit = SimGameUnit(unit_type, self.config, player_index, None, location[0], location[1])
         if not new_unit.stationary:
-            self.__map[x][y].append(new_unit)
+            unit_index = 0 if unit_type == "Scout" else 1 if unit_type == "Demolisher" else 2
+            self.__map[x][y].add(new_unit)
+            
         else:
-            self.__map[x][y] = [new_unit]
+            self.__map[x][y] = {new_unit}
 
     def remove_unit(self, location):
         """Remove all units on the map in the given location.
@@ -186,7 +184,7 @@ class SimGameMap:
             self._invalid_coordinates(location)
         
         x, y = location
-        self.__map[x][y] = []
+        self.__map[x][y] = {}
 
     def get_locations_in_range(self, location, radius):
         """Gets locations in a circular area around a location
@@ -238,3 +236,26 @@ class SimGameMap:
         """
         if(self.enable_warnings):
             debug_write(message)
+
+    def distance_to_closest_edge(self, location):
+        i, j = location
+        # Get all edge locations
+        edges = self.game_map.get_edges()
+
+        # Calculate the minimum distance from the target to any edge
+        return min(self.game_state.game_map.distance_between_locations([i, j], edge) for edge in sum(edges, []))
+    
+    def get_quadrant(self, x: int, y: int) -> Literal[0, 1, 2, 3]:
+        """
+        Returns the quadrant of the map that the location is in
+        """
+        if x < self.HALF_ARENA:
+            if y < self.HALF_ARENA:
+                return self.BOTTOM_LEFT
+            else:
+                return self.TOP_LEFT
+        else:
+            if y < self.HALF_ARENA:
+                return self.BOTTOM_RIGHT
+            else:
+                return self.TOP_RIGHT

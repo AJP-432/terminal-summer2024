@@ -61,6 +61,7 @@ class SimGameState:
 
         self.supports = set() # all supports
         self.fighters = set() # all turrets, scouts, demos, interceptors
+        self.walkers = set() # all walkers (scouts, demos, interceptors)
 
         global WALL, SUPPORT, TURRET, SCOUT, DEMOLISHER, INTERCEPTOR, REMOVE, UPGRADE, STRUCTURE_TYPES, ALL_UNITS, UNIT_TYPE_TO_INDEX
         UNIT_TYPE_TO_INDEX = {}
@@ -142,23 +143,35 @@ class SimGameState:
                 hp = float(shp)
                 # This depends on RM and UP always being the last types to be processed
                 if unit_type == REMOVE:
+                    continue
                     # Quick fix will deploy engine fix soon
-                    if self.contains_stationary_unit([x,y]):
-                        self.game_map[x,y][0].pending_removal = True
+                    # if self.contains_stationary_unit([x,y]):
+                    #     self.game_map[x,y][0].pending_removal = True
                 elif unit_type == UPGRADE:
                     if self.contains_stationary_unit([x,y]):
                         self.game_map[x,y][0].upgrade()
                 else:
-                    unit = SimGameUnit(unit_type, self.config, player_number, hp, x, y)
-                    self.game_map[x,y].append(unit)
+                    unit = SimGameUnit(unit_type, self.config, player_number, hp, x, y, self.get_target_edge([x, y]))
+                    if unit_type in [WALL, SUPPORT, TURRET]:
+                        self.game_map[x,y] = [unit]
+                    else:
+                        if not self.game_map[x, y]:
+                            # Follows player index, scout then demo then interceptor
+                            p1_units = set()
+                            p2_units = set()
+                            self.game_map[x, y] = [p1_units, p2_units]
+                            self.game_map[x, y][player_number].add(unit)
+                            
+
                     if unit_type == SUPPORT: 
                         self.supports.add(unit)
-                    
                     elif unit_type in [TURRET, SCOUT, DEMOLISHER, INTERCEPTOR]: 
                         self.fighters.add(unit)
+                        if unit_type != TURRET:
+                            self.walkers.add(unit)
 
-    def __resource_required(self, unit_type):
-        return self.SP if is_stationary(unit_type) else self.MP
+    # def __resource_required(self, unit_type):
+    #     return self.SP if is_stationary(unit_type) else self.MP
 
     def __set_resource(self, resource_type, amount, player_index=0):
         """
@@ -626,3 +639,39 @@ class SimGameState:
                 if unit.damage_i + unit.damage_f > 0 and unit.player_index != player_index and self.game_map.distance_between_locations(location, location_unit) <= unit.attackRange:
                     attackers.append(unit)
         return attackers
+
+    def get_supports(self):
+        return self.supports
+
+    def get_walkers(self):
+        return self.walkers
+
+    def get_fighters(self):
+        return self.fighters
+        
+    def get_summary(self) -> str:
+        res = {}
+        res["p1Stats"] = [self.my_health, self.get_resource(self.SP), self.get_resource(self.MP), self.my_time]
+        res["p2Stats"] = [self.enemy_health, self.get_resource(self.SP, 1), self.get_resource(self.MP, 1), self.enemy_time]
+        res["p1Units"] = [[], [], [], [], [], [], [], []]
+        res["p2Units"] = [[], [], [], [], [], [], [], []]
+        
+        for x in range(self.ARENA_SIZE):
+            for y in range(self.ARENA_SIZE):
+                if self.game_map[x, y]: # check for empty square
+                    units = self.game_map[x, y]
+                    # its a stationary
+                    if len(units) == 1: 
+                        unit = units[0]
+                        player = "p1Units" if unit.player_index == 0 else "p2Units"
+                        res[player][UNIT_TYPE_TO_INDEX[unit.unit_type]].append([x, y, unit.health, ""])
+                        if unit.upgraded:
+                            res[player][UNIT_TYPE_TO_INDEX[UPGRADE]].append([x, y, 0, ""])
+
+                    # format [p1Units, p2Units]    
+                    else:
+                        for player in ["p1Units", "p2Units"]:
+                            for unit in units[0 if player == "p1Units" else 1]:
+                                res[player][UNIT_TYPE_TO_INDEX[unit.unit_type]].append([x, y, unit.health, ""])
+        
+        return json.dumps(res)
