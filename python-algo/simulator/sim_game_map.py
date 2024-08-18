@@ -1,80 +1,22 @@
 import math
-from .sim_unit import SimGameUnit
-# from gamelib.util import debug_write
-from typing import Literal
+from .constants import MapEdges, UnitType
+from .sim_unit import *
 
 class SimGameMap:
-    """Holds data about the current game map and provides functions
-    useful for getting information related to the map.
+    edges = MapEdges
+    ARENA_SIZE = 28
+    HALF_ARENA = 14
 
-    game_map[x, y] will return a list of Units located at that location, 
-    or an empty list if there are no units at the location
+    def __init__(self) -> None:
+        self.map = [[None for _ in range(self.width)] for _ in range(self.height)]
 
-    Attributes :
-        * config (JSON): Contains information about the current game rules
-        * enable_warnings (bool): If true, debug messages for game_map functions will print out
-        * ARENA_SIZE (int): The size of the arena.
-        * HALF_ARENA (int): Half of the size of the arena.
-        * TOP_RIGHT (int): A constant that represents the top right edge
-        * TOP_LEFT (int): A constant that represents the top left edge
-        * BOTTOM_LEFT (int): Hidden challenge! Can you guess what this constant represents???
-        * BOTTOM_RIGHT (int): A constant that represents the bottom right edge
-
-    """
-    def __init__(self, config):
-        """Initializes constants and game map
-
-        Args:
-            config (JSON): Contains information about the game
-
-        """
-        self.config = config
-        self.enable_warnings = True
-        self.ARENA_SIZE = 28
-        self.HALF_ARENA = int(self.ARENA_SIZE / 2)
-        self.TOP_RIGHT = 0
-        self.TOP_LEFT = 1
-        self.BOTTOM_LEFT = 2
-        self.BOTTOM_RIGHT = 3
-        self.__map = self.__empty_grid()
-        self.__start = [13,0]
+    def __getitem__(self, key: tuple[int, int]) -> SimUnit | None:
+        return self.map[key[0]][key[1]]
     
-    def __getitem__(self, location):
-        if len(location) == 2 and self.in_arena_bounds(location):
-            x,y = location
-            return self.__map[x][y]
-        self._invalid_coordinates(location)
+    def __setitem__(self, key: tuple[int, int], unit: SimUnit) -> None:
+        self.map[key[0]][key[1]] = unit
 
-    def __setitem__(self, location, val):
-        if type(location) == tuple and len(location) == 2 and self.in_arena_bounds(location):
-            self.__map[location[0]][location[1]] = val
-            return
-        self._invalid_coordinates(location)
-
-    def __iter__(self):
-        self.__start = [13,0]
-        return self
-    
-    def __next__(self):
-        location = self.__start
-        if location == [15,27]:
-            raise StopIteration
-        new_location = [location[0]+1, location[1]]
-        while not self.in_arena_bounds(new_location) and not location == [14,27]:
-            if new_location[0] == self.ARENA_SIZE:
-                new_location = [0, new_location[1]+1]
-            else:
-                new_location = [new_location[0]+1, new_location[1]]
-        self.__start = new_location
-        return location 
-
-    def __empty_grid(self):
-        return [[[] for _ in range(self.ARENA_SIZE)] for _ in range(self.ARENA_SIZE)]
-
-    def _invalid_coordinates(self, location):
-        self.warn("{} is out of bounds.".format(str(location)))
-
-    def in_arena_bounds(self, location):
+    def is_in_bounds(self, x: int, y: int) -> bool:
         """Checks if the given location is inside the diamond shaped game board.
 
         Args:
@@ -84,7 +26,6 @@ class SimGameMap:
             True if the location is on the board, False otherwise
         
         """
-        x, y = location
         half_board = self.HALF_ARENA
 
         row_size = y + 1
@@ -99,30 +40,28 @@ class SimGameMap:
 
         return bottom_half_check or top_half_check
 
-    def get_edge_locations(self, quadrant_description):
-        """Takes in an edge description and returns a list of locations.
-        
-        Args:
-            quadrant_description: A constant corresponding to one of the 4 edges. See game_map.TOP_LEFT, game_map.BOTTOM_RIGHT, and similar constants.
+    def get_quadrant(self, x: int, y: int) -> MapEdges:
+        if x < self.SIZE // 2 and y < self.SIZE // 2:
+            return self.edges.BOTTOM_LEFT
+        if x >= self.SIZE // 2 and y < self.SIZE // 2:
+            return self.edges.BOTTOM_RIGHT
+        if x >= self.SIZE // 2 and y >= self.SIZE // 2:
+            return self.edges.TOP_RIGHT
+        if x < self.SIZE // 2 and y >= self.SIZE // 2:
+            return self.edges.TOP_LEFT
 
-        Returns:
-            A list of locations along the requested edge
+    def get_edge_locations(self, quadrant: MapEdges) -> list[tuple[int, int]]:
+        return self.get_edges()[quadrant.value]
 
-        """
-        if not quadrant_description in [self.TOP_LEFT, self.TOP_RIGHT, self.BOTTOM_LEFT, self.BOTTOM_RIGHT]:
-            self.warn("Passed invalid quadrant_description '{}'. See the documentation for valid inputs for get_edge_locations.".format(quadrant_description))
-            return
+    def get_edges(self) -> list[list[tuple[int, int]]]:
 
-        edges = self.get_edges()
-        return edges[quadrant_description]
-
-    def get_edges(self):
         """Gets all of the edges and their edge locations
 
         Returns:
             A list with four lists inside of it of locations corresponding to the four edges.
             [0] = top_right, [1] = top_left, [2] = bottom_left, [3] = bottom_right.
         """
+        # assume 0,0 is bottom left
         top_right = []
         for num in range(0, self.HALF_ARENA):
             x = self.HALF_ARENA + num
@@ -145,76 +84,7 @@ class SimGameMap:
             bottom_right.append([int(x), int(y)])
         return [top_right, top_left, bottom_left, bottom_right]
     
-    def add_unit(self, unit_type, location, player_index=0):
-        """Add a single GameUnit to the map at the given location.
-
-        Args:
-            unit_type: The type of the new unit. Use the constants provided in algo_strategy.
-            location: A list of two integers representing the [x,y] coordinate of the new unit
-            player_index: The index corresponding to the player controlling the new unit, 0 for you 1 for the enemy
-
-        This function does not affect your turn and only changes the data stored in GameMap. The intended use of this function
-        is to allow you to create arbitrary gamestates. Using this function on the game_map provided with game_state will 
-        desynchronize it from the actual gamestate, and can cause issues. 
-        """
-        if not self.in_arena_bounds(location):
-            self._invalid_coordinates(location)
-        if player_index < 0 or player_index > 1:
-            self.warn("Player index {} is invalid. Player index should be 0 or 1.".format(player_index))
-
-        x, y = location
-        new_unit = SimGameUnit(unit_type, self.config, player_index, None, location[0], location[1])
-        if not new_unit.stationary:
-            unit_index = 0 if unit_type == "Scout" else 1 if unit_type == "Demolisher" else 2
-            self.__map[x][y].add(new_unit)
-            
-        else:
-            self.__map[x][y] = {new_unit}
-
-    def remove_unit(self, location):
-        """Remove all units on the map in the given location.
-
-        Args:
-            location: The location that you will empty of units
-
-        This function does not affect your turn and only changes the data stored in GameMap. The intended use of this function
-        is to allow you to create arbitrary gamestates. Using this function on the GameMap inside game_state can cause your algo to crash.
-        """
-        if not self.in_arena_bounds(location):
-            self._invalid_coordinates(location)
-        
-        x, y = location
-        self.__map[x][y] = {}
-
-    def get_locations_in_range(self, location, radius):
-        """Gets locations in a circular area around a location
-
-        Args:
-            location: The center of our search area
-            radius: The radius of our search area
-
-        Returns:
-            The locations that are within our search area
-
-        """
-        if radius < 0 or radius > self.ARENA_SIZE:
-            self.warn("Radius {} was passed to get_locations_in_range. Expected integer between 0 and {}".format(radius, self.ARENA_SIZE))
-        if not self.in_arena_bounds(location):
-            self._invalid_coordinates(location)
-
-        x, y = location
-        locations = []
-        search_radius = math.ceil(radius)
-        getHitRadius = self.config["unitInformation"][0]['getHitRadius']
-        for i in range(int(x - search_radius), int(x + search_radius + 1)):
-            for j in range(int(y - search_radius), int(y + search_radius + 1)):
-                new_location = [i, j]
-                # A unit with a given range affects all locations whose centers are within that range + get hit radius
-                if self.in_arena_bounds(new_location) and self.distance_between_locations(location, new_location) < radius + getHitRadius:
-                    locations.append(new_location)
-        return locations
-
-    def distance_between_locations(self, location_1, location_2):
+    def distance_between_locations(self, location_1: tuple[int, int], location_2: tuple[int, int]) -> float:
         """Euclidean distance
 
         Args:
@@ -229,34 +99,86 @@ class SimGameMap:
         x2, y2 = location_2
 
         return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-
-    def warn(self, message):
-        """
-        Used internally by game_map to print out default messaging
-        """
-        if(self.enable_warnings):
-            # debug_write(message)
-            pass
-
-    def distance_to_closest_edge(self, location):
-        i, j = location
-        # Get all edge locations
-        edges = self.game_map.get_edges()
-
-        # Calculate the minimum distance from the target to any edge
-        return min(self.game_state.game_map.distance_between_locations([i, j], edge) for edge in sum(edges, []))
     
-    def get_quadrant(self, x: int, y: int) -> Literal[0, 1, 2, 3]:
+    #TODO:
+    def distance_to_closest_edge(self, x: int, y: int) -> float:
+        pass
+
+    def add_unit(self, xy: tuple[int, int], unit: SimUnit | SimSupport | SimWalkerStack) -> None:
+        self.map[xy[1]][xy[0]] = unit
+
+    def remove_unit(self, x, y) -> None:
+        if not self.is_in_bounds(x, y):
+            return
+        self.map[y][x] = None
+
+    def get_locations_in_range(self, location: tuple[int, int], radius: float) -> list[tuple[int, int]]:
+        """Gets locations in a circular area around a location
+
+        Args:
+            location: The center of our search area
+            radius: The radius of our search area
+
+        Returns:
+            The locations that are within our search area
+
         """
-        Returns the quadrant of the map that the location is in
-        """
-        if x < self.HALF_ARENA:
-            if y < self.HALF_ARENA:
-                return self.BOTTOM_LEFT
-            else:
-                return self.TOP_LEFT
-        else:
-            if y < self.HALF_ARENA:
-                return self.BOTTOM_RIGHT
-            else:
-                return self.TOP_RIGHT
+        if radius < 0 or radius > self.ARENA_SIZE:
+            self.warn("Radius {} was passed to get_locations_in_range. Expected integer between 0 and {}".format(radius, self.ARENA_SIZE))
+        if not self.is_in_bounds(location):
+            self._invalid_coordinates(location)
+
+        x, y = location
+        locations = []
+        search_radius = math.ceil(radius)
+        getHitRadius = 0.01 #from the configs
+        for i in range(int(x - search_radius), int(x + search_radius + 1)):
+            for j in range(int(y - search_radius), int(y + search_radius + 1)):
+                new_location = (i, j)
+                # A unit with a given range affects all locations whose centers are within that range + get hit radius
+                if self.is_in_bounds(new_location) and self.distance_between_locations(location, new_location) < radius + getHitRadius:
+                    locations.append(new_location)
+        return locations
+    
+    def get_best_target(self, unit: SimUnit): 
+        visible_locations = self.get_locations_in_range(tuple(unit.x, unit.y), unit.attackRange)
+        best_target_location = visible_locations[0]
+
+        for xy in visible_locations: 
+            # None or SimUnit/derived classes
+            target = self[xy]
+
+            # No unit at this location
+            if not target:
+                continue
+
+            # Don't target your own units
+            if target.player_index == unit.player_index:
+                continue
+
+            # stationary units can't target other stationary units
+            if unit.unit_type == UnitType.TURRET and target.unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]:
+                continue
+
+            # 1. Priority Targeting
+            # NOTE: This won't happen because we aren't simulating opponent walkers
+            # if best_target_location.unit_type in [WALL, SUPPORT, TURRET] and target.unit_type in [SCOUT, DEMOLISHER, INTERCEPTOR]:
+            #     best_target_location = tuple(target.x, target.y)
+
+            # 2. Distance Targeting
+            if self.distance_between_locations(tuple(unit.x, unit.y), xy) < self.distance_between_locations(tuple(unit.x, unit.y), best_target_location):
+                best_target_location = tuple(target.x, target.y)
+                
+            # 3. Health Targeting
+            if target.health < best_target_location.health:
+                best_target_location = tuple(target.x, target.y)
+                
+            # 4. Furthest into Your Side (Assume your side is the bottom)
+            if target.y < best_target_location.y:
+                best_target_location = tuple(target.x, target.y)
+
+            # 5. Closest to an Edge
+            if self.distance_to_closest_edge(target.x, target.y) < self.distance_to_closest_edge(best_target_location):
+                best_target_location = tuple(target.x, target.y)
+            
+        return self[best_target_location]

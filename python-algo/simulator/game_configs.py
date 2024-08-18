@@ -1,4 +1,4 @@
-congfigs = {
+configs = {
   "unitInformation": [
     {
       "name": "wall",
@@ -41,7 +41,7 @@ congfigs = {
       "refundPercentage": 0.75,
       "turnsRequiredToRemove": 1,
       "upgrade": {
-        "cost1": 5.0,
+        "cost": 5.0,
         "attackRange":4.5,
         "attackDamageMobile":14.0
       }
@@ -64,7 +64,7 @@ congfigs = {
       "selfDestructStepsRequired": 5
     },
     {
-      "name": "desctructor",
+      "name": "demolisher",
       "attackDamageMobile":8.0,
       "attackDamageTower":8.0,
       "playerBreachDamage":2.0,
