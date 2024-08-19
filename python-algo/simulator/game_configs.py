@@ -14,7 +14,7 @@ configs = {
     },
     {
       "name": "support",
-      "cost":4.0,
+      "cost": 4.0,
       "getHitRadius":0.01,
       "shieldPerUnit":3.0,
       "shieldRange":2.5,
