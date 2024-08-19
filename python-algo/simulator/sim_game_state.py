@@ -1,6 +1,6 @@
 import json
 
-from pygame import display
+import pygame
 from .sim_game_map import SimGameMap
 from .sim_navigation import SimShortestPathFinder
 from .constants import UnitType, MapEdges
@@ -30,7 +30,7 @@ class SimGameState:
         p1_units = [a+b for a,b in zip(last_action_frame["p1Units"], test["p1Units"])]
         p2_units = [a+b for a,b in zip(last_action_frame["p2Units"], test["p2Units"])]
 
-        # self.load_units(p1_units, p2_units)
+        self.load_units(p1_units, p2_units)
         
     """
     {
@@ -198,12 +198,12 @@ class SimGameState:
     def find_path_to_edge(self, xy: tuple[int, int], target_edge: MapEdges) -> list[tuple[int, int]]:
         pass
 
-    def draw(self, screen: display) -> None:
+    def draw(self, screen: pygame.display, font: pygame.font.Font) -> None:
         # draw map
-        self.game_map.draw(screen)
+        self.game_map.draw(screen, font)
         # draw units
         for unit in self.all_units:
-            unit.draw(screen)
+            unit.draw(screen, font)
 
     def run_frame(self) -> None:
         # all logic in a single loop iteration

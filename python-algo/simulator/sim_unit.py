@@ -104,7 +104,17 @@ class SimWalkerStack(SimUnit):
             return self.health.pop()
         
         return self.health[-1]
+    
+    def draw(self, screen: pygame.display, font: pygame.font.Font):
+        color = (0, 255, 0)
+        center = (12 + self.x*25, 50 + 12 + (26-self.y)*25)
+        pygame.draw.circle(screen, color, center, 10)
         
+        text_surface = font.render(str(self.unit_count), True, (0, 0, 0))  # White color text
+        text_rect = text_surface.get_rect(center=center)
+
+        # Blit the text onto the screen
+        screen.blit(text_surface, text_rect)
 
 
 
