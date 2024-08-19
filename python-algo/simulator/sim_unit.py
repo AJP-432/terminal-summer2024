@@ -38,11 +38,11 @@ class SimUnit:
 
         if self.unit_type == UnitType.WALL:
             rect = pygame.Rect(0, 0, 10, 10)
-            rect.center = (12 + self.x*25, 50 + 12 + (26-self.y)*25)
+            rect.center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
             pygame.draw.rect(screen, color, rect)
         elif self.unit_type == UnitType.TURRET:
             rect = pygame.Rect(0, 0, 20, 20)
-            rect.center = (12 + self.x*25, 50 + 12 + (26-self.y)*25)
+            rect.center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
             pygame.draw.rect(screen, color, rect)
 
 class SimSupport(SimUnit):
@@ -60,7 +60,7 @@ class SimSupport(SimUnit):
     
     def draw(self, screen: pygame.display):
         color = self.color_by_health()
-        center = (12 + self.x*25, 50 + 12 + (26-self.y)*25)
+        center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
         pygame.draw.circle(screen, color, center, 10)
 
 class SimWalkerStack(SimUnit):
@@ -107,7 +107,7 @@ class SimWalkerStack(SimUnit):
     
     def draw(self, screen: pygame.display, font: pygame.font.Font):
         color = (0, 255, 0)
-        center = (12 + self.x*25, 50 + 12 + (26-self.y)*25)
+        center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
         pygame.draw.circle(screen, color, center, 10)
         
         text_surface = font.render(str(self.unit_count), True, (0, 0, 0))  # White color text

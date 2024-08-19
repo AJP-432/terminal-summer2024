@@ -26,6 +26,7 @@ class Simulator:
         running = True
         while running:
             # if p[""]
+            # print(self.test)
             if self.using_pygame:
                 p = pygame.key.get_pressed()
                 self.screen.fill((200, 200, 200))
@@ -33,8 +34,7 @@ class Simulator:
                     if event.type == pygame.QUIT:
                         running = False
                 mx, my = pygame.mouse.get_pos()
-                x_index, y_index = (mx - 12)//25, 26 - (my - 50 - 12)//25
-                # copilot, fix the y index so that higher on the screen is a higher y index
+                x_index, y_index = (mx - 12)//25, 27 - (my - 50 - 12)//25
                 print(x_index, y_index) 
             
             if not self.game_state.is_round_over():
@@ -53,80 +53,25 @@ class Simulator:
 import os
 if __name__ == "__main__":
     obj = {
-    "turnInfo": 
-    [
-        1,
-        2,
-        57
-    ],
-    "p1Stats": 
-    [
-        22,
-        12.4,
-        2.3,
-        52933
-    ],
-    "p2Stats": 
-    [
-        25,
-        9.5,
-        0.3,
-        82365
-    ],
-    "p1Units": 
-    [
+    "turnInfo": [1,2,57],
+    "p1Stats": [22,12.4,2.3,52933],
+    "p2Stats": [25,9.5,0.3,82365],
+    "p1Units": [
+        [],
+        [],
         [
+            [24,13,75,"2"],
+            [22,11,75,"8"],
+            [10,9,28,"10"],
+            [17,9,75,"12"],
+            [14,6,75,"14"],
+            [13,6,75,"44"]
         ],
-        [
-        ],
-        [
-            [
-                24,
-                13,
-                75,
-                "2"
-            ],
-            [
-                22,
-                11,
-                75,
-                "8"
-            ],
-            [
-                10,
-                9,
-                28,
-                "10"
-            ],
-            [
-                17,
-                9,
-                75,
-                "12"
-            ],
-            [
-                14,
-                6,
-                75,
-                "14"
-            ],
-            [
-                13,
-                6,
-                75,
-                "44"
-            ]
-        ],
-        [
-        ],
-        [
-        ],
-        [
-        ],
-        [
-        ],
-        [
-        ]
+        [],
+        [],
+        [],
+        [],
+        []
     ],
     "p2Units": 
     [
