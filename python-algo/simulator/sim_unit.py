@@ -6,11 +6,11 @@ from .constants import *
 from game_configs import configs
 
 class SimUnit:
-    def __init__(self, unit_type: UnitType, xy: tuple[int, int], player_index: Literal[0, 1], unit_count = 1) -> None:
+    def __init__(self, unit_type: UnitType, xy: tuple[int, int], player_index: Literal[0, 1], health: float = None, unit_count = 1) -> None:
         self.unit_count = unit_count
         self.unit_type = unit_type
         self.x, self.y = xy
-        self.health = configs["unitInformation"][unit_type]["startHealth"]
+        self.health = health or configs["unitInformation"][unit_type]["startHealth"]
         self.player_index = player_index
         self.upgraded = False
         self.cost = configs["unitInformation"][unit_type]["cost"]
@@ -24,8 +24,8 @@ class SimUnit:
         return self.health
 
 class SimSupport(SimUnit):
-    def __init__(self, xy: tuple[int, int], player_index: Literal[0, 1], target_edge: MapEdges, health:int = -1) -> None:
-        super().__init__(UnitType.SUPPORT, xy, player_index, target_edge, health)
+    def __init__(self, xy: tuple[int, int], player_index: Literal[0, 1],  health:int = None) -> None:
+        super().__init__(UnitType.SUPPORT, xy, player_index, health)
         self.given_shield = set()
         self.shieldPerUnit = configs["unitInformation"][UnitType.SUPPORT]["shieldPerUnit"]
         self.shieldBonusPerY = configs["unitInformation"][UnitType.SUPPORT]["shieldBonusPerY"]
@@ -53,6 +53,9 @@ class SimWalkerStack(SimUnit):
         """
         returns health of the last unit in the stack
         """
+        if len(self.health) == 0:
+            return 0
+        
         self.health[-1] -= damage
 
         if self.health[-1] <= 0:
