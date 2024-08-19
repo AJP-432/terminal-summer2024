@@ -31,7 +31,8 @@ class Simulator:
             # if not self.game_state.is_round_over():
             if True:
                 # self.game_state.run_frame()
-                self.game_state.draw(self.screen)
+                if self.using_pygame:
+                    self.game_state.draw(self.screen)
             
             if self.using_pygame:
                 pygame.display.update()
@@ -195,6 +196,6 @@ if __name__ == "__main__":
         ]
     ]
 })
-    sim = Simulator(string, string, using_pygame=True)
+    sim = Simulator(string, string, using_pygame=False)
     results = sim.run_simulation()
     print(results)
