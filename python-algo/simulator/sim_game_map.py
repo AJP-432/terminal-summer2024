@@ -1,6 +1,9 @@
 import math
 from .constants import MapEdges, UnitType
 from .sim_unit import *
+from pygame import display, Rect
+from pygame.draw import rect as draw_rect
+from pygame.draw import circle as draw_circle
 
 class SimGameMap:
     edges = MapEdges
@@ -8,13 +11,22 @@ class SimGameMap:
     HALF_ARENA = 14
 
     def __init__(self) -> None:
-        self.map = [[None for _ in range(self.width)] for _ in range(self.height)]
+        self.map = [[None for _ in range(self.ARENA_SIZE)] for _ in range(self.ARENA_SIZE)]
 
     def __getitem__(self, key: tuple[int, int]) -> SimUnit | None:
         return self.map[key[0]][key[1]]
     
     def __setitem__(self, key: tuple[int, int], unit: SimUnit) -> None:
         self.map[key[0]][key[1]] = unit
+
+    def draw(self, screen: display) -> None:
+        rect = Rect(0, 50, 700, 700)
+        draw_rect(screen, (0,0,0), rect)
+        for y in range(self.ARENA_SIZE):
+            for x in range(self.ARENA_SIZE):
+                color = (255, 255, 255) if self.is_in_bounds(x, y) else (0, 0, 0)
+                
+                draw_circle(screen, color, (12 + x*25, 50 + 12 + y*25), 2)
     
     def contains_stationary_unit(self, x: int, y: int) -> bool:
         """

@@ -24,7 +24,7 @@ This class helps with pathfinding. We guarantee the results will
 be accurate, but top players may want to write their own pathfinding
 code to maximise time efficiency
 """
-class ShortestPathFinder:
+class SimShortestPathFinder:
     """Handles path-finding
 
     Attributes :

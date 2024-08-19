@@ -26,7 +26,7 @@ configs = {
       "turnsRequiredToRemove": 1,
       "upgrade": {
         "shieldRange": 6,
-        "shieldPerUnit": 2,
+        "shieldPerUnit": 5,
         "shieldBonusPerY": 0.3
       }
     },

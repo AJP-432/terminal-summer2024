@@ -3,8 +3,8 @@ from enum import Enum
 class MapEdges(Enum):
     TOP_LEFT = 0
     TOP_RIGHT = 1
-    BOTTOM_RIGHT = 2
-    BOTTOM_LEFT = 3
+    BOTTOM_LEFT = 2
+    BOTTOM_RIGHT = 3
 
 class UnitType(Enum):
     WALL = 0

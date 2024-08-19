@@ -1,8 +1,11 @@
-from .sim_game_map import SimGameMap
-from .constants import UnitType, MapEdges
 import json
-from game_configs import configs
-from .sim_unit import *
+
+from pygame import display
+from .sim_game_map import SimGameMap
+from .sim_navigation import SimShortestPathFinder
+from .constants import UnitType, MapEdges
+from .game_configs import configs
+from .sim_unit import SimUnit, SimSupport, SimWalkerStack
 
 class SimGameState:
     STRUCTURES = [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]
@@ -16,57 +19,129 @@ class SimGameState:
         self.walker_stacks = set()
         self.supports = set()
         self.fighters = set()
+        self.all_units = set()
 
         self.game_map = SimGameMap()
-        self.pathfinder = SimShortestPath()
+        self.pathfinder = SimShortestPathFinder()
 
         self.parse_frame(last_action_frame)
-        self.load_units(last_action_frame["p1Units"], last_action_frame["p2Units"], test)
-        
 
+        # merge arrays of units
+        p1_units = [a+b for a,b in zip(last_action_frame["p1Units"], test["p1Units"])]
+        p2_units = [a+b for a,b in zip(last_action_frame["p2Units"], test["p2Units"])]
+
+        # self.load_units(p1_units, p2_units)
+        
+    """
+    {
+        "p1Units": [[] for _ in range(8)],
+        "p2Units": [[] for _ in range(8)], 
+    }
+    """
     def parse_frame(self, frame: json) -> None:
-        p1_health, p1_SP, p1_MP, p1_time = frame["p1Stats"][:3]
-        p2_health, p2_SP, p2_MP, p2_time = frame["p2Stats"][:3]
+        p1_health, p1_SP, p1_MP = frame["p1Stats"][:3]
+        p2_health, p2_SP, p2_MP = frame["p2Stats"][:3]
 
         self.player_stats = [
             {
                 "health": p1_health,
                 "SP": p1_SP,
-                "MP": p1_MP,
-                "time": p1_time
+                "MP": p1_MP
             },
             {
                 "health": p2_health,
                 "SP": p2_SP,
-                "MP": p2_MP,
-                "time": p2_time
+                "MP": p2_MP
             }
         ]
+            
 
-    def load_units(self, p1_units: list, p2_units: list, test_units: json) -> None:
-        # p1 and p2 units are going to be the type from the frame state. Tests will be our notation 
-        # I think turrets and walls can just be SimUnit and don't need serparate derived classes
-        # Supports and walkers have their own derived classes. 
-        # I might have missed some properties in the above classes. Please verify
+    def load_units(self, p1_units: list[list], p2_units: list[list]) -> None:
+        #TODO: Add each unit to self.all_units
         
-        # Walls
-        for x, y, hp, _ in (p1_units[0] + test_units["p1Units"][0]):
-            u = SimUnit(UnitType.WALL, (x, y), hp, 0)
-            self.game_map.add_unit(u)
-        
-        for x, y, hp, _ in (p2_units[0] + test_units["p2Units"][0]):
-            u = SimUnit(UnitType.WALL, (x, y), hp, 1)
-            self.game_map.add_unit(u)
+        # Wall
+        for entry in p1_units[0]:
+            x = entry[0]
+            y = entry[1]
+            hp = entry[2]
+            u = SimUnit(UnitType.WALL, (x, y), 0, hp)
+            self.game_map.add_unit((x, y), u)
+
+        for entry in p2_units[0]:
+            x = entry[0]
+            y = entry[1]
+            hp = entry[2]
+            u = SimUnit(UnitType.WALL, (x, y), 1, hp)
+            self.game_map.add_unit((x, y), u)
         
         # Supports
-        for x, y, hp, _ in (p1_units[1] + test_units["p1Units"][1]):
-            u = SimSupport(UnitType.SUPPORT, (x, y), hp, 0)
-            self.game_map.add_unit(u)
+        print("p1", p1_units)
+        print("p2", p2_units)
+        for entry in p1_units[1]:
+            x = entry[0]
+            y = entry[1]
+            hp = entry[2]
+            u = SimSupport((x, y), 0, hp)
+            self.game_map.add_unit((x, y), u)
+            self.supports.add(u)
+
+        for entry in p2_units[1]:
+            x = entry[0]
+            y = entry[1]
+            hp = entry[2]
+            u = SimSupport((x, y), 1, hp)
+            self.game_map.add_unit((x, y), u)
+            self.supports.add(u)
         
-        for x, y, hp, _ in (p2_units[1] + test_units["p2Units"][1]):
-            u = SimUnit(UnitType.SUPPORT, (x, y), hp, 1)
-            self.game_map.add_unit(u)
-     
+        # Turret
+        for entry in p1_units[2]:
+            x = entry[0]
+            y = entry[1]
+            hp = entry[2]
+            u = SimUnit(UnitType.TURRET, (x, y), 0, hp)
+            self.game_map.add_unit((x, y), u)
+            self.fighters.add(u)
+
+        for entry in p2_units[2]:
+            x = entry[0]
+            y = entry[1]
+            hp = entry[2]
+            u = SimUnit(UnitType.TURRET, (x, y), 1, hp)
+            self.game_map.add_unit((x, y), u)
+            self.fighters.add(u)
+        
+        # Scout & Demo & Interceptor
+        for i in range(3, 6):
+            for entry in p1_units[i]:
+                x = entry[0]
+                y = entry[1]
+                unit = self.game_map[x, y]
+                if not unit:
+                    u = SimWalkerStack(i, (x, y), 0, 1)
+                    self.game_map.add_unit((x, y), u)
+                    self.fighters.add(u)
+                    self.walker_stacks.add(u)
+                else: 
+                    unit.add_to_stack()
+
+            for entry in p2_units[i]:
+                x = entry[0]
+                y = entry[1]
+                if not unit:
+                    u = SimWalkerStack(i, (x, y), 1, 1)
+                    self.game_map.add_unit((x, y), u)
+                    self.fighters.add(u)
+                    self.walker_stacks.add(u)
+                else: 
+                    unit.add_to_stack()
+                
+        # Upgrades
+        for x, y, _, _ in p1_units[7]:
+            self.game_map[x, y].upgrade()
+
+        for x, y, _, _ in p2_units[7]:
+            self.game_map[x, y].upgrade()
+        
     def get_walkers(self) -> set:
         return self.walker_stacks
     
@@ -89,6 +164,13 @@ class SimGameState:
 
     def find_path_to_edge(self, xy: tuple[int, int], target_edge: MapEdges) -> list[tuple[int, int]]:
         pass
+
+    def draw(self, screen: display) -> None:
+        # draw map
+        self.game_map.draw(screen)
+        # draw units
+        for unit in self.all_units:
+            unit.draw(screen)
 
     def run_frame(self) -> None:
         # all logic in a single loop iteration
@@ -120,6 +202,7 @@ class SimGameState:
                 # remove walker_stack from map
                 self.game_map.remove_unit(walker_stack.x, walker_stack.y)
                 self.fighters.remove(walker_stack)
+                self.all_units.remove(walker_stack)
                 self.walker_stacks.remove(walker_stack)
 
                 # update resources
@@ -153,11 +236,25 @@ class SimGameState:
                     
                     elif target.unit_count <= 0: 
                         units_to_remove.add(target)
+        
+        if any_destoyed:
+            for walker_stack in self.walker_stacks:
+                if walker_stack in units_to_remove:
+                    continue
                 
+                # can be optimized 
+                start_location = walker_stack.x, walker_stack.y
+                edge_squares = self.game_map.get_edge_locations(walker_stack.get_target_edge())
+                path = self.pathfinder.navigate_multiple_endpoints(start_location, edge_squares, self.game_state)
+                walker_stack.set_path(path)
+
+
+        # remove deleted units
         for unit in units_to_remove:
             self.game_map.remove_unit(unit.x, unit.y)
             if unit.unit_type in [UnitType.TURRET, UnitType.SCOUT, UnitType.DEMOLISHER, UnitType.INTERCEPTOR]:
                 self.fighters.remove(unit)
+                self.all_units.remove(unit)
                 if unit.unit_type != UnitType.TURRET:
                     self.walker_stacks.remove(unit)
 
@@ -165,4 +262,3 @@ class SimGameState:
 
         
 
-        
