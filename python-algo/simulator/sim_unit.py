@@ -24,6 +24,7 @@ class SimUnit:
         return self.health
     
     def upgrade(self):
+        self.upgraded = True
         if self.unit_type == UnitType.TURRET:
             self.attackRange = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["attackRange"]
             self.damage_walker = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["attackDamageMobile"]
@@ -32,18 +33,23 @@ class SimUnit:
         scaling_factor = self.health / configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["startHealth"]
         scaling_factor = max(0, min(1, scaling_factor))
         return (int(255*scaling_factor), int(255*scaling_factor), int(255*scaling_factor))
+    
+    def draw_upgraded(self, xy: tuple[int, int], screen: pygame.display):
+        pygame.draw.circle(screen, (255, 255, 0), (12 + xy[0]*25, 50 + 12 + (27-xy[1])*25), 4)
+        pygame.draw.circle(screen, (0, 0, 0), (12 + xy[0]*25, 50 + 12 + (27-xy[1])*25), 4, 1) #outline
 
     def draw(self, screen: pygame.display, font: pygame.font.Font):
         color = self.color_by_health()
 
         if self.unit_type == UnitType.WALL:
             rect = pygame.Rect(0, 0, 10, 10)
-            rect.center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
-            pygame.draw.rect(screen, color, rect)
         elif self.unit_type == UnitType.TURRET:
             rect = pygame.Rect(0, 0, 20, 20)
-            rect.center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
-            pygame.draw.rect(screen, color, rect)
+
+        rect.center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
+        pygame.draw.rect(screen, color, rect)
+        if self.upgraded:
+            self.draw_upgraded((self.x, self.y), screen)
 
 class SimSupport(SimUnit):
     def __init__(self, xy: tuple[int, int], player_index: Literal[0, 1],  health:int = None) -> None:
@@ -62,6 +68,8 @@ class SimSupport(SimUnit):
         color = self.color_by_health()
         center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
         pygame.draw.circle(screen, color, center, 10)
+        if self.upgraded:
+            self.draw_upgraded((self.x, self.y), screen)
 
 class SimWalkerStack(SimUnit):
     def __init__(self, unit_type: UnitType, xy: tuple[int, int], player_index: Literal[0, 1], unit_count) -> None:

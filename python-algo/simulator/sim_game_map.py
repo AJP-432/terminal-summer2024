@@ -169,10 +169,13 @@ class SimGameMap:
                     locations.append(new_location)
         return locations
     
-    def get_best_target(self, unit: SimUnit): 
+    def get_best_target(self, unit: SimUnit) -> SimUnit | None: 
         visible_locations = self.get_locations_in_range((unit.x, unit.y), unit.attackRange)
+        if not visible_locations:
+            return None
+        
         best_target_location = visible_locations[0]
-
+        # breakpoint()
         for xy in visible_locations: 
             # None or SimUnit/derived classes
             target = self[xy]
@@ -205,22 +208,31 @@ class SimGameMap:
             # NOTE: This won't happen because we aren't simulating opponent walkers
             # if best_target_location.unit_type in [WALL, SUPPORT, TURRET] and target.unit_type in [SCOUT, DEMOLISHER, INTERCEPTOR]:
             #     best_target_location = tuple(target.x, target.y)
-
             # 2. Distance Targeting
             if self.distance_between_locations((unit.x, unit.y), xy) < self.distance_between_locations((unit.x, unit.y), best_target_location):
                 best_target_location = (target.x, target.y)
-                
+                continue
+        
+            if self.distance_between_locations((unit.x, unit.y), xy) == self.distance_between_locations((unit.x, unit.y), best_target_location):
                 # 3. Health Targeting (make sure to not shoot a target that is already dead (not yet cleaned up!))
-                if target.health < best_target_location.health and target.health > 0:
+                if self[best_target_location].unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]:
+                    best_target_hp = self[best_target_location].health
+                else:
+                    best_target_hp = 0 if self[best_target_location].unit_count <= 0 else self[best_target_location].health[-1]
+
+                # target hp is better than current best
+                if target_hp < best_target_hp and target_hp > 0:
                     best_target_location = (target.x, target.y)
-                
+                    continue
+
+                if target.health == best_target_hp:
                     # 4. Furthest into Your Side (Assume your side is the bottom)
                     if (unit.player_index == 0 and target.y < best_target_location[1]) or (unit.player_index == 1 and target.y > best_target_location[1]):
                         best_target_location = (target.x, target.y)
-
+                        continue
+                    elif target.y == best_target_location[1]:
                         # 5. Closest to an Edge
                         if self.distance_to_closest_edge(target.x, target.y) < self.distance_to_closest_edge(best_target_location):
                             best_target_location = (target.x, target.y)
-            
         return self[best_target_location]
     

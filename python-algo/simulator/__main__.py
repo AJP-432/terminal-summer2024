@@ -21,32 +21,42 @@ class Simulator:
         
         pygame.font.init()
         self.font = pygame.font.SysFont('Comic Sans MS', 15)
+        self.clock = pygame.time.Clock()
     
     def run_simulation(self) -> list[str]:
         running = True
+        run_full_round = False
+        run_single_frame = False
+        self.game_state.draw(self.screen, self.font)
         while running:
-            # if p[""]
-            # print(self.test)
-            if self.using_pygame:
-                p = pygame.key.get_pressed()
-                self.screen.fill((200, 200, 200))
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-                mx, my = pygame.mouse.get_pos()
-                x_index, y_index = (mx - 12)//25, 27 - (my - 50 - 12)//25
-                print(x_index, y_index) 
-            
-            if not self.game_state.is_round_over():
-                # self.game_state.run_frame()
-                if self.using_pygame:
-                    self.game_state.draw(self.screen, self.font)
-            
-            if self.using_pygame:
-                pygame.display.update()
+            # self.screen.fill((200, 200, 200))
 
-        if self.using_pygame:
-            pygame.quit()
+            p = pygame.key.get_pressed()
+            if p[pygame.K_SPACE]:
+                run_full_round = not run_full_round
+            if p[pygame.K_RIGHT]:
+                run_single_frame = True
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            mx, my = pygame.mouse.get_pos()
+            x_index, y_index = (mx - 12)//25, 27 - (my - 50 - 12)//25
+            # print(x_index, y_index)
+            font = self.font.render(f"{x_index}, {y_index}", True, (255,255,255))
+            font_rect = font.get_rect(center=(750, 100))
+            self.screen.blit(font, font_rect) 
+            
+            if (run_full_round or run_single_frame) and not self.game_state.is_round_over():
+                self.game_state.run_frame()
+                self.game_state.draw(self.screen, self.font)
+                run_single_frame = False
+            
+            pygame.display.update()
+            self.clock.tick(10) #10 FPS, ie delay 100ms between frames
+
+        pygame.quit()
         
         return self.game_state.get_results()
     
@@ -75,79 +85,22 @@ if __name__ == "__main__":
     ],
     "p2Units": 
     [
-        [
-            [
-                4,
-                14,
-                40,
-                "51"
-            ]
-        ],
+        [[4,14,40,"51"]],
         [],
         [
-            [
-                3,
-                17,
-                30,
-                "18"
-            ],
-            [
-                0,
-                14,
-                30,
-                "20"
-            ],
-            [
-                1,
-                15,
-                30,
-                "22"
-            ],
-            [
-                1,
-                14,
-                30,
-                "24"
-            ],
-            [
-                2,
-                14,
-                30,
-                "26"
-            ],
-            [
-                2,
-                15,
-                30,
-                "28"
-            ],
-            [
-                3,
-                14,
-                39,
-                "47"
-            ],
-            [
-                3,
-                15,
-                75,
-                "49"
-            ]
-        ],
-        [
-        ],
-        [
+            [3, 17, 30, "18"],
+            [0, 14, 30, "20"],
+            [1, 15, 30, "22"],
+            [2, 14, 30, "26"],
+            [2, 15, 30, "28"],
+            [3, 14, 39, "47"],
+            [3, 15, 75, "49"]
         ],
         [],
         [],
-        [
-            [
-                4,
-                14,
-                0,
-                "52"
-            ]
-        ]
+        [],
+        [],
+        [[4,14,0,"52"]]
     ]
 }
     test = {

@@ -173,7 +173,6 @@ class SimGameState:
     def is_round_over(self) -> bool:
         return len(self.walker_stacks) == 0
     
-    # TODO
     def get_results(self) -> json:
         # Format: 
         # Just return game state object
