@@ -200,8 +200,8 @@ class SimGameMap:
             if self.distance_between_locations(tuple(unit.x, unit.y), xy) < self.distance_between_locations(tuple(unit.x, unit.y), best_target_location):
                 best_target_location = tuple(target.x, target.y)
                 
-            # 3. Health Targeting
-            if target.health < best_target_location.health:
+            # 3. Health Targeting (make sure to not shoot a target that is already dead (not yet cleaned up!))
+            if target.health < best_target_location.health and target.health > 0:
                 best_target_location = tuple(target.x, target.y)
                 
             # 4. Furthest into Your Side (Assume your side is the bottom)

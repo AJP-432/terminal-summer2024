@@ -7,7 +7,6 @@ import json
 
 from simulator.main import Simulator
 
-
 """
 Most of the algo code you write will be in this file unless you create new
 modules yourself. Start by modifying the 'on_turn' function.
@@ -63,9 +62,12 @@ class AlgoStrategy(gamelib.AlgoCore):
         # 
         game_state.attempt_spawn(SCOUT, [13, 0], max_scouts)
 
-        tests = [json.dumps(test)]
-        sim_results = self.simulate(tests)
-        self.test_sim()
+        sim_result = self.simulate(test)
+
+        with open("sim_results.txt", "a") as f:
+            f.write(f"ROUND: {game_state.turn_number}\n" + json.dumps(sim_result))    
+
+        self.official_result(game_state.turn_number)
 
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
@@ -75,9 +77,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         game_state.submit_turn()
 
     # just for testing purposes
-    def test_sim(self):
+    def official_result(self, round: int):
         with open("official_result.txt", "a") as file:
-            file.write(self.last_action_frame)
+            file.write(f"ROUND: {round}\n" + self.last_action_frame)
 
 
     def test_defense(self, game_state):
@@ -293,30 +295,20 @@ class AlgoStrategy(gamelib.AlgoCore):
     #       }
     #       ... rest of tests
     #     ]
-    def simulate(self, tests: list[str]):
+    def simulate(self, test: json) -> json:
         if self.last_action_frame == "":
-            return []
+            gamelib.debug_write("No last action frame to simulate")
+            return {}
         
         last_action_frame_json = json.loads(self.last_action_frame)
         
         for event in ["selfDestruct", "breach", "damage", "shield", "move", "spawn", "death", "attack", "melee"]:
             last_action_frame_json[event] = []
+                
+        sim = Simulator(self.config, last_action_frame_json, test, using_pygame=True)
+        res = sim.run_simulation()        
         
-        # gamelib.debug_write(last_action_frame_json)
-        with open("config.txt", "a") as f:
-            f.write(json.dumps(self.config))
-            
-        last_action_frame_string = json.dumps(last_action_frame_json)
-        tests_string = json.dumps(tests)
-        
-        sim = Simulator(self.config, last_action_frame_string, tests_string)
-        sim.run_simulations()
-        res = sim.get_results()
-
-        # res format: List[json strings of {p1Stats, p2Stats, p1Units, p2Units}] 
-        with open("sim_results.txt", "a") as f:
-            f.write(res[0])    
-        
+        # gamelib.debug_write(json.dumps(res))
         return res
 
 

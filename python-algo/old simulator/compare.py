@@ -1,5 +1,11 @@
 import json
 
+with open('sim_results.txt') as f:
+    lines = [line.rstrip() for line in f]
+
+with open('official_result.txt') as f:
+    lines = [line.rstrip() for line in f]
+
 # Sort units within each type
 def sort_units(units):
     # Sort by X coordinate, then by Y coordinate, then by health
