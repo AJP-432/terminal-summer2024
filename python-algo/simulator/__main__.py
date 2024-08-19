@@ -25,7 +25,9 @@ class Simulator:
     def run_simulation(self) -> list[str]:
         running = True
         while running:
+            # if p[""]
             if self.using_pygame:
+                p = pygame.key.get_pressed()
                 self.screen.fill((200, 200, 200))
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -35,8 +37,7 @@ class Simulator:
                 # copilot, fix the y index so that higher on the screen is a higher y index
                 print(x_index, y_index) 
             
-            # if not self.game_state.is_round_over():
-            if True:
+            if not self.game_state.is_round_over():
                 # self.game_state.run_frame()
                 if self.using_pygame:
                     self.game_state.draw(self.screen, self.font)
