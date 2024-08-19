@@ -18,6 +18,9 @@ class Simulator:
         pygame.init()
         self.screen = pygame.display.set_mode((700,900))
         pygame.display.set_caption("Terminal Tower Defense")
+        
+        pygame.font.init()
+        self.font = pygame.font.SysFont('Comic Sans MS', 15)
     
     def run_simulation(self) -> list[str]:
         running = True
@@ -36,7 +39,7 @@ class Simulator:
             if True:
                 # self.game_state.run_frame()
                 if self.using_pygame:
-                    self.game_state.draw(self.screen)
+                    self.game_state.draw(self.screen, self.font)
             
             if self.using_pygame:
                 pygame.display.update()
