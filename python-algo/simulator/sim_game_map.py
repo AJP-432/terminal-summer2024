@@ -180,19 +180,26 @@ class SimGameMap:
             # No unit at this location
             if not target:
                 continue
-        
-            # If we have nothing, settle for the first thing that is valid 
-            if not self[best_target_location] and target and target.player_index != unit.player_index and ((target.unit_type in [UnitType.SCOUT, UnitType.DEMOLISHER, UnitType.INTERCEPTOR] and target.unit_count > 0) or (target.unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT] and target.health > 0)):
-                best_target_location = xy
-                continue
-
+                
             # Don't target your own units
             if target.player_index == unit.player_index:
                 continue
 
-            # stationary units can't target other stationary units
+            # turret can not it stationary units
             if unit.unit_type == UnitType.TURRET and target.unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]:
                 continue
+        
+            if target.unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]:
+                target_hp = target.health
+            else: 
+                target_hp =  0 if target.unit_count <= 0 else target.health[-1]
+        
+            # If we have nothing, settle for the first thing that is valid 
+            if not self[best_target_location] and target and target_hp > 0:
+                best_target_location = xy
+                continue
+
+            
 
             # 1. Priority Targeting
             # NOTE: This won't happen because we aren't simulating opponent walkers
@@ -200,20 +207,20 @@ class SimGameMap:
             #     best_target_location = tuple(target.x, target.y)
 
             # 2. Distance Targeting
-            if self.distance_between_locations(tuple(unit.x, unit.y), xy) < self.distance_between_locations(tuple(unit.x, unit.y), best_target_location):
-                best_target_location = tuple(target.x, target.y)
+            if self.distance_between_locations((unit.x, unit.y), xy) < self.distance_between_locations((unit.x, unit.y), best_target_location):
+                best_target_location = (target.x, target.y)
                 
-            # 3. Health Targeting (make sure to not shoot a target that is already dead (not yet cleaned up!))
-            if target.health < best_target_location.health and target.health > 0:
-                best_target_location = tuple(target.x, target.y)
+                # 3. Health Targeting (make sure to not shoot a target that is already dead (not yet cleaned up!))
+                if target.health < best_target_location.health and target.health > 0:
+                    best_target_location = (target.x, target.y)
                 
-            # 4. Furthest into Your Side (Assume your side is the bottom)
-            if target.y < best_target_location.y:
-                best_target_location = tuple(target.x, target.y)
+                    # 4. Furthest into Your Side (Assume your side is the bottom)
+                    if (unit.player_index == 0 and target.y < best_target_location[1]) or (unit.player_index == 1 and target.y > best_target_location[1]):
+                        best_target_location = (target.x, target.y)
 
-            # 5. Closest to an Edge
-            if self.distance_to_closest_edge(target.x, target.y) < self.distance_to_closest_edge(best_target_location):
-                best_target_location = tuple(target.x, target.y)
+                        # 5. Closest to an Edge
+                        if self.distance_to_closest_edge(target.x, target.y) < self.distance_to_closest_edge(best_target_location):
+                            best_target_location = (target.x, target.y)
             
         return self[best_target_location]
     
