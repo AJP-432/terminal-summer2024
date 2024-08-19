@@ -1,6 +1,9 @@
 from queue import Queue
 from typing import Literal
-from pygame import display
+from pygame import display, Rect
+from pygame.draw import rect as draw_rect
+from pygame.draw import circle as draw_circle
+from pygame import transform
 
 from .constants import *
 from .game_configs import configs
@@ -28,8 +31,22 @@ class SimUnit:
             self.attackRange = configs["unitInformation"][self.unit_type]["upgrade"]["attackRange"]
             self.damage_walker = configs["unitInformation"][self.unit_type]["upgrade"]["attackDamageMobile"]
 
+    def color_by_health(self):
+        scaling_factor = self.health/configs["unitInformation"][self.unit_type.value]["startHealth"]
+        scaling_factor = max(0, min(1, scaling_factor))
+        return (int(255*scaling_factor), int(255*scaling_factor), int(255*scaling_factor))
+
     def draw(self, screen: display):
-        pass
+        color = self.color_by_health()
+
+        if self.unit_type == UnitType.WALL:
+            rect = Rect(0, 0, 10, 10)
+            rect.center = (12 + self.x*25, 50 + 12 + (26-self.y)*25)
+            draw_rect(screen, color, rect)
+        elif self.unit_type == UnitType.TURRET:
+            rect = Rect(0, 0, 20, 20)
+            rect.center = (12 + self.x*25, 50 + 12 + (26-self.y)*25)
+            draw_rect(screen, color, rect)
 
 class SimSupport(SimUnit):
     def __init__(self, xy: tuple[int, int], player_index: Literal[0, 1],  health:int = None) -> None:
@@ -43,6 +60,11 @@ class SimSupport(SimUnit):
         self.shieldRange = configs["unitInformation"][UnitType.SUPPORT.value]["upgrade"]["shieldRange"]
         self.shieldPerUnit = configs["unitInformation"][self.unit_type]["upgrade"]["shieldPerUnit"]
         self.shieldBonusPerY = configs["unitInformation"][self.unit_type]["upgrade"]["shieldBonusPerY"]
+
+    def draw(self, screen: display):
+        color = self.color_by_health()
+        center = (12 + self.x*25, 50 + 12 + (26-self.y)*25)
+        draw_circle(screen, color, center, 10)
 
 class SimWalkerStack(SimUnit):
     def __init__(self, unit_type: UnitType, xy: tuple[int, int], player_index: Literal[0, 1], unit_count) -> None:

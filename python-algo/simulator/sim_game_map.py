@@ -24,7 +24,10 @@ class SimGameMap:
         draw_rect(screen, (0,0,0), rect)
         for y in range(self.ARENA_SIZE):
             for x in range(self.ARENA_SIZE):
-                color = (255, 255, 255) if self.is_in_bounds(x, y) else (0, 0, 0)
+                if self.is_in_bounds(x, y):
+                    color = (255, 0, 0) if y < self.HALF_ARENA else (0, 255, 255)
+                else:
+                    color = (0, 0, 0)
                 
                 draw_circle(screen, color, (12 + x*25, 50 + 12 + y*25), 2)
     
