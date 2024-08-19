@@ -13,8 +13,8 @@ class UnitType(Enum):
     SCOUT = 3
     DEMOLISHER = 4
     INTERCEPTOR = 5
-    # REMOVE = 6
-    # UPGRADE = 7   
+    REMOVE = 6
+    UPGRADE = 7   
 
 class ResourceTypes(Enum):
     SP = 0
