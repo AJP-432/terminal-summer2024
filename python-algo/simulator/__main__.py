@@ -5,9 +5,9 @@ from .sim_game_state import SimGameState
 
 
 class Simulator:
-    def __init__(self, last_action_frame: str, test: str, using_pygame: bool = False) -> None:
-        self.last_action_frame = json.loads(last_action_frame)
-        self.test = json.loads(test)
+    def __init__(self, last_action_frame: json, test: json, using_pygame: bool = False) -> None:
+        self.last_action_frame = last_action_frame
+        self.test = test
         self.game_state = SimGameState(self.last_action_frame, self.test)
         self.using_pygame = using_pygame
 
@@ -52,7 +52,7 @@ class Simulator:
     
 import os
 if __name__ == "__main__":
-    string = json.dumps({
+    obj = {
     "turnInfo": 
     [
         1,
@@ -124,6 +124,8 @@ if __name__ == "__main__":
         [
         ],
         [
+        ],
+        [
         ]
     ],
     "p2Units": 
@@ -132,10 +134,11 @@ if __name__ == "__main__":
             [
                 4,
                 14,
-                60,
+                40,
                 "51"
             ]
         ],
+        [],
         [
             [
                 3,
@@ -144,56 +147,54 @@ if __name__ == "__main__":
                 "18"
             ],
             [
-                [
-                    0,
-                    14,
-                    30,
-                    "20"
-                ],
-                [
-                    1,
-                    15,
-                    30,
-                    "22"
-                ],
-                [
-                    1,
-                    14,
-                    30,
-                    "24"
-                ],
-                [
-                    2,
-                    14,
-                    30,
-                    "26"
-                ],
-                [
-                    2,
-                    15,
-                    30,
-                    "28"
-                ],
-                [
-                    3,
-                    14,
-                    39,
-                    "47"
-                ],
-                [
-                    3,
-                    15,
-                    75,
-                    "49"
-                ]
+                0,
+                14,
+                30,
+                "20"
+            ],
+            [
+                1,
+                15,
+                30,
+                "22"
+            ],
+            [
+                1,
+                14,
+                30,
+                "24"
+            ],
+            [
+                2,
+                14,
+                30,
+                "26"
+            ],
+            [
+                2,
+                15,
+                30,
+                "28"
+            ],
+            [
+                3,
+                14,
+                39,
+                "47"
+            ],
+            [
+                3,
+                15,
+                75,
+                "49"
             ]
         ],
         [
         ],
         [
         ],
-        [
-        ],
+        [],
+        [],
         [
             [
                 4,
@@ -203,7 +204,12 @@ if __name__ == "__main__":
             ]
         ]
     ]
-})
-    sim = Simulator(string, string, using_pygame=True)
+}
+    test = {
+        "p1Units": [[],[],[],[[3, 10, 12, ""]],[],[],[], []],
+        "p2Units": [[],[],[],[],[],[],[],[]]
+    }
+
+    sim = Simulator(obj, test, using_pygame=True)
     results = sim.run_simulation()
     print(results)

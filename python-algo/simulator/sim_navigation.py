@@ -49,7 +49,7 @@ class SimShortestPathFinder:
         #Initialize map 
         self.initialized = True
         self.game_state = game_state
-        self.game_map = [[Node() for x in range(self.game_state.ARENA_SIZE)] for y in range(self.game_state.ARENA_SIZE)]
+        self.game_map = [[Node() for x in range(28)] for y in range(28)]
 
     def navigate_multiple_endpoints(self, start_point, end_points, game_state):
         """Finds the path a unit would take to reach a set of endpoints
@@ -70,9 +70,11 @@ class SimShortestPathFinder:
         #Initialize map 
         self.initialize_map(game_state)
         #Fill in walls
-        for location in self.game_state.game_map:
-            if self.game_state.contains_stationary_unit(location):
-                self.game_map[location[0]][location[1]].blocked = True
+        for i in range(28):
+            for j in range(28):
+                location = [i, j]
+                if self.game_state.contains_stationary_unit(location):
+                    self.game_map[location[0]][location[1]].blocked = True
         #Do pathfinding
         ideal_endpoints = self._idealness_search(start_point, end_points)
         self._validate(ideal_endpoints, end_points)
@@ -92,7 +94,7 @@ class SimShortestPathFinder:
         while not current.empty():
             search_location = current.get()
             for neighbor in self._get_neighbors(search_location):
-                if not self.game_state.game_map.is_in_bounds(neighbor) or self.game_map[neighbor[0]][neighbor[1]].blocked:
+                if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0]][neighbor[1]].blocked:
                     continue
 
                 x, y = neighbor
@@ -180,7 +182,7 @@ class SimShortestPathFinder:
             current_location = current.get()
             current_node = self.game_map[current_location[0]][current_location[1]]
             for neighbor in self._get_neighbors(current_location):
-                if not self.game_state.game_map.is_in_bounds(neighbor) or self.game_map[neighbor[0]][neighbor[1]].blocked:
+                if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0]][neighbor[1]].blocked:
                     continue
 
                 neighbor_node = self.game_map[neighbor[0]][neighbor[1]]
@@ -227,7 +229,7 @@ class SimShortestPathFinder:
         best_pathlength = self.game_map[current_point[0]][current_point[1]].pathlength
         for neighbor in neighbors:
             #debug_write("Comparing champ {} and contender {}".format(ideal_neighbor, neighbor))
-            if not self.game_state.game_map.is_in_bounds(neighbor) or self.game_map[neighbor[0]][neighbor[1]].blocked:
+            if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0]][neighbor[1]].blocked:
                 continue
 
             new_best = False

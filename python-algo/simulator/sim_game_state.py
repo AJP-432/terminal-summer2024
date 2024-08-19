@@ -24,6 +24,9 @@ class SimGameState:
         self.game_map = SimGameMap()
         self.pathfinder = SimShortestPathFinder()
 
+        self.ARENA_SIZE = 28
+        self.HALF_ARENA = int(self.ARENA_SIZE / 2)
+
         self.parse_frame(last_action_frame)
 
         # merge arrays of units
@@ -148,13 +151,14 @@ class SimGameState:
             self.game_map[x, y].upgrade()
 
         for x, y, _, _ in p2_units[7]:
+            print(f"UPGRADE: {x}, {y}")
             self.game_map[x, y].upgrade()
         
         # initialize paths for walker stacks
         for walker_stack in self.walker_stacks:
             start_location = walker_stack.x, walker_stack.y
             edge_squares = self.game_map.get_edge_locations(walker_stack.get_target_edge())
-            path = self.pathfinder.navigate_multiple_endpoints(start_location, edge_squares, self.game_state)
+            path = self.pathfinder.navigate_multiple_endpoints(start_location, edge_squares, self)
             walker_stack.set_path(path)
         
     def get_walkers(self) -> set:
@@ -292,10 +296,3 @@ class SimGameState:
                 self.fighters.remove(unit)
                 if unit.unit_type != UnitType.TURRET:
                     self.walker_stacks.remove(unit)
-
-    
-
-        
-
-        
-
