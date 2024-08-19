@@ -10,13 +10,13 @@ class SimUnit:
         self.unit_count = unit_count
         self.unit_type = unit_type
         self.x, self.y = xy
-        self.health = health or configs["unitInformation"][unit_type.value]["startHealth"]
+        self.health = health if health else configs["unitInformation"][unit_type_to_index[unit_type]]["startHealth"]
         self.player_index = player_index
         self.upgraded = False
-        self.cost = configs["unitInformation"][unit_type.value]["cost"]
-        self.attackRange = configs["unitInformation"][unit_type.value].get("attackRange", 0)
-        self.damage_structure = configs["unitInformation"][unit_type.value].get("attackDamageTower", 0)
-        self.damage_walker = configs["unitInformation"][unit_type.value].get("attackDamageMobile", 0)
+        self.cost = configs["unitInformation"][unit_type_to_index[UnitType(unit_type)]]["cost"]
+        self.attackRange = configs["unitInformation"][unit_type_to_index[UnitType(unit_type)]].get("attackRange", 0)
+        self.damage_structure = configs["unitInformation"][unit_type_to_index[UnitType(unit_type)]].get("attackDamageTower", 0)
+        self.damage_walker = configs["unitInformation"][unit_type_to_index[UnitType(unit_type)]].get("attackDamageMobile", 0)
         # self.pending_removal = False
     
     def inflict_damage(self, damage: float) -> float:
@@ -25,15 +25,15 @@ class SimUnit:
     
     def upgrade(self):
         if self.unit_type == UnitType.TURRET:
-            self.attackRange = configs["unitInformation"][self.unit_type]["upgrade"]["attackRange"]
-            self.damage_walker = configs["unitInformation"][self.unit_type]["upgrade"]["attackDamageMobile"]
+            self.attackRange = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["attackRange"]
+            self.damage_walker = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["attackDamageMobile"]
 
     def color_by_health(self):
-        scaling_factor = self.health/configs["unitInformation"][self.unit_type.value]["startHealth"]
+        scaling_factor = self.health / configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["startHealth"]
         scaling_factor = max(0, min(1, scaling_factor))
         return (int(255*scaling_factor), int(255*scaling_factor), int(255*scaling_factor))
 
-    def draw(self, screen: pygame.display):
+    def draw(self, screen: pygame.display, font: pygame.font.Font):
         color = self.color_by_health()
 
         if self.unit_type == UnitType.WALL:
@@ -49,14 +49,14 @@ class SimSupport(SimUnit):
     def __init__(self, xy: tuple[int, int], player_index: Literal[0, 1],  health:int = None) -> None:
         super().__init__(UnitType.SUPPORT, xy, player_index, health)
         self.given_shield = set()
-        self.shieldPerUnit = configs["unitInformation"][UnitType.SUPPORT.value]["shieldPerUnit"]
-        self.shieldBonusPerY = configs["unitInformation"][UnitType.SUPPORT.value]["shieldBonusPerY"]
-        self.shieldRange = configs["unitInformation"][UnitType.SUPPORT.value]["shieldRange"]
+        self.shieldPerUnit = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["shieldPerUnit"]
+        self.shieldBonusPerY = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["shieldBonusPerY"]
+        self.shieldRange = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["shieldRange"]
     
     def upgrade(self):
-        self.shieldRange = configs["unitInformation"][UnitType.SUPPORT.value]["upgrade"]["shieldRange"]
-        self.shieldPerUnit = configs["unitInformation"][self.unit_type]["upgrade"]["shieldPerUnit"]
-        self.shieldBonusPerY = configs["unitInformation"][self.unit_type]["upgrade"]["shieldBonusPerY"]
+        self.shieldRange = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["shieldRange"]
+        self.shieldPerUnit = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["shieldPerUnit"]
+        self.shieldBonusPerY = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["shieldBonusPerY"]
     
     def draw(self, screen: pygame.display):
         color = self.color_by_health()
@@ -67,13 +67,13 @@ class SimWalkerStack(SimUnit):
     def __init__(self, unit_type: UnitType, xy: tuple[int, int], player_index: Literal[0, 1], unit_count) -> None:
         super().__init__(unit_type, xy, player_index, unit_count)
         self.target_edge = self.get_target_edge()
-        self.health = [configs["unitInformation"][unit_type.value]["startHealth"] for _ in range(unit_count)]
+        self.health = [configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["startHealth"] for _ in range(unit_count)]
         self.path = Queue()
-        self.speed = configs["unitInformation"][unit_type.value].get("speed", 0)
+        self.speed = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]].get("speed", 0)
 
     def get_target_edge(self):
-        if self.target_edge:
-            return self.target_edge
+        # if self.target_edge:
+        #     return self.target_edge
 
         # hard coded half arena size
         return MapEdges.TOP_LEFT if self.x >= 14 else MapEdges.TOP_RIGHT        

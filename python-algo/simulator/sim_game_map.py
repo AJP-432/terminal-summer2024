@@ -12,10 +12,10 @@ class SimGameMap:
         self.map = [[None for _ in range(self.ARENA_SIZE)] for _ in range(self.ARENA_SIZE)]
 
     def __getitem__(self, key: tuple[int, int]) -> SimUnit | None:
-        return self.map[key[0]][key[1]]
+        return self.map[key[1]][key[0]]
     
     def __setitem__(self, key: tuple[int, int], unit: SimUnit) -> None:
-        self.map[key[0]][key[1]] = unit
+        self.map[key[1]][key[0]] = unit
 
     def draw(self, screen: pygame.display, font: pygame.font.Font) -> None:
         rect = pygame.Rect(0, 50, 700, 700)
@@ -63,13 +63,13 @@ class SimGameMap:
         """"
         Gets the quadrant of the map that a location is in
         """
-        if x < self.SIZE // 2 and y < self.SIZE // 2:
+        if x < self.ARENA_SIZE // 2 and y < self.ARENA_SIZE // 2:
             return self.edges.BOTTOM_LEFT
-        if x >= self.SIZE // 2 and y < self.SIZE // 2:
+        if x >= self.ARENA_SIZE // 2 and y < self.ARENA_SIZE // 2:
             return self.edges.BOTTOM_RIGHT
-        if x >= self.SIZE // 2 and y >= self.SIZE // 2:
+        if x >= self.ARENA_SIZE // 2 and y >= self.ARENA_SIZE // 2:
             return self.edges.TOP_RIGHT
-        if x < self.SIZE // 2 and y >= self.SIZE // 2:
+        if x < self.ARENA_SIZE // 2 and y >= self.ARENA_SIZE // 2:
             return self.edges.TOP_LEFT
 
     def get_edge_locations(self, quadrant: MapEdges) -> list[tuple[int, int]]:
@@ -154,7 +154,7 @@ class SimGameMap:
         """
         if radius < 0 or radius > self.ARENA_SIZE:
             self.warn("Radius {} was passed to get_locations_in_range. Expected integer between 0 and {}".format(radius, self.ARENA_SIZE))
-        if not self.is_in_bounds(location):
+        if not self.is_in_bounds(location[0], location[1]):
             self._invalid_coordinates(location)
 
         x, y = location
@@ -165,12 +165,12 @@ class SimGameMap:
             for j in range(int(y - search_radius), int(y + search_radius + 1)):
                 new_location = (i, j)
                 # A unit with a given range affects all locations whose centers are within that range + get hit radius
-                if self.is_in_bounds(new_location) and self.distance_between_locations(location, new_location) < radius + getHitRadius:
+                if self.is_in_bounds(new_location[0], new_location[1]) and self.distance_between_locations(location, new_location) < radius + getHitRadius:
                     locations.append(new_location)
         return locations
     
     def get_best_target(self, unit: SimUnit): 
-        visible_locations = self.get_locations_in_range(tuple(unit.x, unit.y), unit.attackRange)
+        visible_locations = self.get_locations_in_range((unit.x, unit.y), unit.attackRange)
         best_target_location = visible_locations[0]
 
         for xy in visible_locations: 
@@ -179,6 +179,11 @@ class SimGameMap:
 
             # No unit at this location
             if not target:
+                continue
+        
+            # If we have nothing, settle for the first thing that is valid 
+            if not self[best_target_location] and target and target.player_index != unit.player_index and ((target.unit_type in [UnitType.SCOUT, UnitType.DEMOLISHER, UnitType.INTERCEPTOR] and target.unit_count > 0) or (target.unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT] and target.health > 0)):
+                best_target_location = xy
                 continue
 
             # Don't target your own units
@@ -211,3 +216,4 @@ class SimGameMap:
                 best_target_location = tuple(target.x, target.y)
             
         return self[best_target_location]
+    
