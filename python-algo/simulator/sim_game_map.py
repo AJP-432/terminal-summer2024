@@ -15,6 +15,12 @@ class SimGameMap:
     
     def __setitem__(self, key: tuple[int, int], unit: SimUnit) -> None:
         self.map[key[0]][key[1]] = unit
+    
+    def contains_stationary_unit(self, x: int, y: int) -> bool:
+        """
+        Checks if given location contains a stationary unit (WALL, TURRET, SUPPORT)
+        """
+        return self.map[y][x] and self.map[y][x].unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]
 
     def is_in_bounds(self, x: int, y: int) -> bool:
         """Checks if the given location is inside the diamond shaped game board.
@@ -41,6 +47,9 @@ class SimGameMap:
         return bottom_half_check or top_half_check
 
     def get_quadrant(self, x: int, y: int) -> MapEdges:
+        """"
+        Gets the quadrant of the map that a location is in
+        """
         if x < self.SIZE // 2 and y < self.SIZE // 2:
             return self.edges.BOTTOM_LEFT
         if x >= self.SIZE // 2 and y < self.SIZE // 2:
@@ -100,9 +109,16 @@ class SimGameMap:
 
         return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
     
-    #TODO:
+    # TODO: by AJ
     def distance_to_closest_edge(self, x: int, y: int) -> float:
-        pass
+        """Calculates the distance from a location to the closest edge"""
+        quadrant = self.get_quadrant(x, y)
+        edge_locations = self.get_edge_locations(quadrant)
+        min_distance = float("inf")
+        for edge_location in edge_locations:
+            distance = self.distance_between_locations((x, y), edge_location)
+            min_distance = min(min_distance, distance)
+        return min_distance
 
     def add_unit(self, xy: tuple[int, int], unit: SimUnit | SimSupport | SimWalkerStack) -> None:
         self.map[xy[1]][xy[0]] = unit

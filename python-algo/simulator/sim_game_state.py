@@ -48,9 +48,25 @@ class SimGameState:
         # I think turrets and walls can just be SimUnit and don't need serparate derived classes
         # Supports and walkers have their own derived classes. 
         # I might have missed some properties in the above classes. Please verify
-        pass
-
-    
+        
+        # Walls
+        for x, y, hp, _ in (p1_units[0] + test_units["p1Units"][0]):
+            u = SimUnit(UnitType.WALL, (x, y), hp, 0)
+            self.game_map.add_unit(u)
+        
+        for x, y, hp, _ in (p2_units[0] + test_units["p2Units"][0]):
+            u = SimUnit(UnitType.WALL, (x, y), hp, 1)
+            self.game_map.add_unit(u)
+        
+        # Supports
+        for x, y, hp, _ in (p1_units[1] + test_units["p1Units"][1]):
+            u = SimSupport(UnitType.SUPPORT, (x, y), hp, 0)
+            self.game_map.add_unit(u)
+        
+        for x, y, hp, _ in (p2_units[1] + test_units["p2Units"][1]):
+            u = SimUnit(UnitType.SUPPORT, (x, y), hp, 1)
+            self.game_map.add_unit(u)
+     
     def get_walkers(self) -> set:
         return self.walker_stacks
     
@@ -81,7 +97,7 @@ class SimGameState:
         
         self.frame += 1
 
-        # supports givign shields
+        # supports giving shields
         for support in self.supports:
             support_xy = support.x, support.y
             shield_range = self.game_map.get_locations_in_range(support_xy, support.shield_range)
@@ -91,15 +107,12 @@ class SimGameState:
                 if unit and not self.contains_stationary_unit(xy):
                     if unit.player_index == support.player_index and unit not in support.given_shield:
                         support.given_shield.add(unit)
-                        unit.health += support.shield_per_unit + support.shield_bonus_per_y * (support.y - xy[1])
+                        unit.health = list(map(lambda x: x + support.shield_per_unit, unit.health))
 
         # move walkers
         have_moved = set()
         for walker_stack in self.walker_stacks:
-            if walker_stack in have_moved:
-                continue
-
-            if self.frame % walker_stack.speed != 0:
+            if walker_stack in have_moved or self.frame % walker_stack.speed != 0:
                 continue
 
             quadrant = self.game_map.get_quadrant(walker_stack.x, walker_stack.y)
@@ -111,8 +124,9 @@ class SimGameState:
 
                 # update resources
                 enemy_index = 1 if walker_stack.player_index == 0 else 0
-                self.player_stats[enemy_index]["health"] -= 2 if walker_stack.unit_type == UnitType.DEMOLISHER else 1
-                self.player_stats[walker_stack.player_index]["SP"] += 2 if walker_stack.unit_type == UnitType.DEMOLISHER else 1
+                damage = walker_stack.unit_count * (2 if walker_stack.unit_type == UnitType.DEMOLISHER else 1)
+                self.player_stats[enemy_index]["health"] -= damage
+                self.player_stats[walker_stack.player_index]["SP"] += damage
                 continue
 
             # move unit to next spot in path. 
@@ -133,8 +147,21 @@ class SimGameState:
                 
                 target_health = target.inflict_damage(fighter.damage_structure if target.unit_type in self.STRUCTURES else fighter.damage_walker)
                 if target_health <= 0:
-                    units_to_remove.add(target)
-                    any_destoyed = True
+                    if target.unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]:
+                        any_destoyed = True
+                        units_to_remove.add(target)
+                    
+                    elif target.unit_count <= 0: 
+                        units_to_remove.add(target)
+                
+        for unit in units_to_remove:
+            self.game_map.remove_unit(unit.x, unit.y)
+            if unit.unit_type in [UnitType.TURRET, UnitType.SCOUT, UnitType.DEMOLISHER, UnitType.INTERCEPTOR]:
+                self.fighters.remove(unit)
+                if unit.unit_type != UnitType.TURRET:
+                    self.walker_stacks.remove(unit)
+
+        
 
         
 

@@ -6,11 +6,11 @@ from .constants import *
 from game_configs import configs
 
 class SimUnit:
-    def __init__(self, unit_type: UnitType, xy: tuple[int, int], player_index: Literal[0, 1], unit_count = 1) -> None:
+    def __init__(self, unit_type: UnitType, xy: tuple[int, int], health, player_index: Literal[0, 1], unit_count = 1) -> None:
         self.unit_count = unit_count
         self.unit_type = unit_type
         self.x, self.y = xy
-        self.health = configs["unitInformation"][unit_type]["startHealth"]
+        self.health = health
         self.player_index = player_index
         self.upgraded = False
         self.cost = configs["unitInformation"][unit_type]["cost"]
@@ -24,7 +24,7 @@ class SimUnit:
         return self.health
 
 class SimSupport(SimUnit):
-    def __init__(self, xy: tuple[int, int], player_index: Literal[0, 1], target_edge: MapEdges, health:int = -1) -> None:
+    def __init__(self, xy: tuple[int, int], player_index: Literal[0, 1], target_edge: MapEdges, health) -> None:
         super().__init__(UnitType.SUPPORT, xy, player_index, target_edge, health)
         self.given_shield = set()
         self.shieldPerUnit = configs["unitInformation"][UnitType.SUPPORT]["shieldPerUnit"]
