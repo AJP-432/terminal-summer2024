@@ -27,6 +27,10 @@ class Simulator:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
+                mx, my = pygame.mouse.get_pos()
+                x_index, y_index = (mx - 12)//25, 26 - (my - 50 - 12)//25
+                # copilot, fix the y index so that higher on the screen is a higher y index
+                print(x_index, y_index) 
             
             # if not self.game_state.is_round_over():
             if True:
@@ -196,6 +200,6 @@ if __name__ == "__main__":
         ]
     ]
 })
-    sim = Simulator(string, string, using_pygame=False)
+    sim = Simulator(string, string, using_pygame=True)
     results = sim.run_simulation()
     print(results)
