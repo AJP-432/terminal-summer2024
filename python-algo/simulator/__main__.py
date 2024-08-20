@@ -57,7 +57,7 @@ class Simulator:
             self.clock.tick(10) #10 FPS, ie delay 100ms between frames
 
         pygame.quit()
-        
+        breakpoint()
         return self.game_state.get_results()
     
 import os
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     ]
 }
     test = {
-        "p1Units": [[],[],[],[[3, 10, 12, ""]],[],[],[], []],
+        "p1Units": [[],[],[],[[9, 4, 12, ""]],[],[],[], []],
         "p2Units": [[],[],[],[],[],[],[],[]]
     }
 

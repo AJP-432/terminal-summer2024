@@ -12,10 +12,10 @@ class SimGameMap:
         self.map = [[None for _ in range(self.ARENA_SIZE)] for _ in range(self.ARENA_SIZE)]
 
     def __getitem__(self, key: tuple[int, int]) -> SimUnit | None:
-        return self.map[key[1]][key[0]]
+        return self.map[key[0]][key[1]]
     
     def __setitem__(self, key: tuple[int, int], unit: SimUnit) -> None:
-        self.map[key[1]][key[0]] = unit
+        self.map[key[0]][key[1]] = unit
 
     def draw(self, screen: pygame.display, font: pygame.font.Font) -> None:
         rect = pygame.Rect(0, 50, 700, 700)
@@ -33,7 +33,7 @@ class SimGameMap:
         """
         Checks if given location contains a stationary unit (WALL, TURRET, SUPPORT)
         """
-        return self.map[y][x] and self.map[y][x].unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]
+        return self[x,y] and self[x,y].unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]
 
     def is_in_bounds(self, x: int, y: int) -> bool:
         """Checks if the given location is inside the diamond shaped game board.
@@ -132,14 +132,14 @@ class SimGameMap:
             distance = self.distance_between_locations((x, y), edge_location)
             min_distance = min(min_distance, distance)
         return min_distance
-
+    
     def add_unit(self, xy: tuple[int, int], unit: SimUnit | SimSupport | SimWalkerStack) -> None:
-        self.map[xy[1]][xy[0]] = unit
+        self[xy] = unit
 
     def remove_unit(self, x, y) -> None:
         if not self.is_in_bounds(x, y):
             return
-        self.map[y][x] = None
+        self[x,y] = None
 
     def get_locations_in_range(self, location: tuple[int, int], radius: float) -> list[tuple[int, int]]:
         """Gets locations in a circular area around a location

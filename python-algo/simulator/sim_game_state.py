@@ -214,6 +214,7 @@ class SimGameState:
             return
         
         self.frame += 1
+        print(self.frame)
 
         # supports giving shields
         for support in self.supports:
@@ -230,7 +231,7 @@ class SimGameState:
         # move walkers
         have_moved = set()
         for walker_stack in self.walker_stacks:
-            if walker_stack in have_moved or self.frame % walker_stack.speed != 0:
+            if walker_stack in have_moved:
                 continue
 
             quadrant = self.game_map.get_quadrant(walker_stack.x, walker_stack.y)
@@ -251,6 +252,7 @@ class SimGameState:
             # move unit to next spot in path. 
             # Assumption that there will be no other units in the path.
             next_step = walker_stack.next_step()
+            walker_stack.x, walker_stack.y = next_step
             self.game_map.remove_unit(walker_stack.x, walker_stack.y)
             self.game_map.add_unit(next_step, walker_stack)
 

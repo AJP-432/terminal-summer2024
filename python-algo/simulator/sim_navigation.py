@@ -24,6 +24,12 @@ This class helps with pathfinding. We guarantee the results will
 be accurate, but top players may want to write their own pathfinding
 code to maximise time efficiency
 """
+
+class Map:
+    def __init__(self):
+        self.map = [[Node() for x in range(28)] for y in range(28)]
+    def __getitem__(self, location):
+        return self.map[location[0]][location[1]]
 class SimShortestPathFinder:
     """Handles path-finding
 
@@ -49,7 +55,7 @@ class SimShortestPathFinder:
         #Initialize map 
         self.initialized = True
         self.game_state = game_state
-        self.game_map = [[Node() for x in range(28)] for y in range(28)]
+        self.game_map = Map()
 
     def navigate_multiple_endpoints(self, start_point, end_points, game_state):
         """Finds the path a unit would take to reach a set of endpoints
@@ -74,7 +80,7 @@ class SimShortestPathFinder:
             for j in range(28):
                 location = [i, j]
                 if self.game_state.contains_stationary_unit(location):
-                    self.game_map[location[0]][location[1]].blocked = True
+                    self.game_map[location[0],location[1]].blocked = True
         #Do pathfinding
         ideal_endpoints = self._idealness_search(start_point, end_points)
         self._validate(ideal_endpoints, end_points)
@@ -88,13 +94,13 @@ class SimShortestPathFinder:
         current = queue.Queue()
         current.put(start)
         best_idealness = self._get_idealness(start, end_points)
-        self.game_map[start[0]][start[1]].visited_idealness = True
+        self.game_map[start[0],start[1]].visited_idealness = True
         most_ideal = start
 
         while not current.empty():
             search_location = current.get()
             for neighbor in self._get_neighbors(search_location):
-                if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0]][neighbor[1]].blocked:
+                if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0],neighbor[1]].blocked:
                     continue
 
                 x, y = neighbor
@@ -104,8 +110,8 @@ class SimShortestPathFinder:
                     best_idealness = current_idealness
                     most_ideal = neighbor
 
-                if not self.game_map[x][y].visited_idealness and not self.game_map[x][y].blocked:
-                    self.game_map[x][y].visited_idealness = True
+                if not self.game_map[x,y].visited_idealness and not self.game_map[x,y].blocked:
+                    self.game_map[x,y].visited_idealness = True
                     current.put(neighbor)
 
         return most_ideal
@@ -170,22 +176,22 @@ class SimShortestPathFinder:
             for location in end_points:
                current.put(location)
                #Set current pathlength to 0
-               self.game_map[location[0]][location[1]].pathlength = 0
-               self.game_map[location[0]][location[1]].visited_validate = True
+               self.game_map[location[0],location[1]].pathlength = 0
+               self.game_map[location[0],location[1]].visited_validate = True
         else:
             current.put(ideal_tile)
-            self.game_map[ideal_tile[0]][ideal_tile[1]].pathlength = 0
-            self.game_map[ideal_tile[0]][ideal_tile[1]].visited_validate = True
+            self.game_map[ideal_tile[0],ideal_tile[1]].pathlength = 0
+            self.game_map[ideal_tile[0],ideal_tile[1]].visited_validate = True
 
         #While current is not empty
         while not current.empty():
             current_location = current.get()
-            current_node = self.game_map[current_location[0]][current_location[1]]
+            current_node = self.game_map[current_location[0],current_location[1]]
             for neighbor in self._get_neighbors(current_location):
-                if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0]][neighbor[1]].blocked:
+                if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0],neighbor[1]].blocked:
                     continue
 
-                neighbor_node = self.game_map[neighbor[0]][neighbor[1]]
+                neighbor_node = self.game_map[neighbor[0],neighbor[1]]
                 if not neighbor_node.visited_validate and not current_node.blocked:
                     neighbor_node.pathlength = current_node.pathlength + 1
                     neighbor_node.visited_validate = True
@@ -200,12 +206,12 @@ class SimShortestPathFinder:
 
         """
         #GET THE PATH
-        path = [start_point]
+        path = []
         current = start_point
         move_direction = 0
 
-        while not self.game_map[current[0]][current[1]].pathlength == 0:
-            #debug_write("current tile {} has cost {}".format(current, self.game_map[current[0]][current[1]].pathlength))
+        while not self.game_map[current[0],current[1]].pathlength == 0:
+            #debug_write("current tile {} has cost {}".format(current, self.game_map[current[0],current[1]].pathlength))
             next_move = self._choose_next_move(current, move_direction, end_points)
             #debug_write(next_move)
 
@@ -226,15 +232,15 @@ class SimShortestPathFinder:
         #debug_write("Unit at {} previously moved {} and has these neighbors {}".format(current_point, previous_move_direction, neighbors))
 
         ideal_neighbor = current_point
-        best_pathlength = self.game_map[current_point[0]][current_point[1]].pathlength
+        best_pathlength = self.game_map[current_point[0],current_point[1]].pathlength
         for neighbor in neighbors:
             #debug_write("Comparing champ {} and contender {}".format(ideal_neighbor, neighbor))
-            if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0]][neighbor[1]].blocked:
+            if not self.game_state.game_map.is_in_bounds(neighbor[0], neighbor[1]) or self.game_map[neighbor[0],neighbor[1]].blocked:
                 continue
 
             new_best = False
             x, y = neighbor
-            current_pathlength = self.game_map[x][y].pathlength
+            current_pathlength = self.game_map[x,y].pathlength
 
             #Filter by pathlength
             if current_pathlength > best_pathlength:
