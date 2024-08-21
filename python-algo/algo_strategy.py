@@ -118,18 +118,18 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
 
         if game_state.turn_number == 2:
-            self.should_attack_edge = True
-            can_attack_edge = self.find_edge_holes_enemy(game_state)
-            if can_attack_edge == 'left':
-                self.spawn_reactive_support(game_state, [1, 12])
-                game_state.attempt_spawn(SCOUT, [1, 12], 1000)
-                self.remove_supports(game_state, [1, 12])
-            elif can_attack_edge == 'right':
-                self.spawn_reactive_support(game_state, [26, 12])
-                game_state.attempt_spawn(SCOUT, [26, 12], 1000)
-                self.remove_supports(game_state, [26, 12])
-            else:
+            self.should_attack_back = True
+            can_attack_back = self.find_edge_holes_enemy(game_state)
+            if can_attack_back == 'left':
+                self.spawn_reactive_support(game_state, [13, 0])
                 game_state.attempt_spawn(SCOUT, [13, 0], 1000)
+                self.remove_supports(game_state, [13, 0])
+            elif can_attack_back == 'right':
+                self.spawn_reactive_support(game_state, [14, 0])
+                game_state.attempt_spawn(SCOUT, [14, 0], 1000)
+                self.remove_supports(game_state, [14, 0])
+            else:
+                game_state.attempt_spawn(SCOUT, [1, 12], 1000)
         
         if game_state.turn_number > 2: 
             last_scout_count = self.scout_count[-1]
@@ -336,20 +336,22 @@ class AlgoStrategy(gamelib.AlgoCore):
         # More community tools available at: https://terminal.c1games.com/rules#Download
 
 
-        second_turrets = [[3, 12], [24, 12]]
-        third_turrets = [[11, 12], [16, 12]]
-        fourth_turrets = [[2, 13], [25, 13]]
+        second_turrets = [[13, 9], [14, 9]]
+        third_turrets = [[3, 12], [24, 12]]
+        fourth_turrets = [[11, 12], [16, 12]]
+        fifth_turrets = [[2, 13], [25, 13]]
         
         third_walls = [[3, 13], [24, 13]]
         fourth_walls = [[11, 13], [16, 13]]
         second_walls = [[0, 13], [27, 13]]
 
-        self.initial_build(game_state)
-
         # round 2 bait
         if game_state.turn_number == 2:
             game_state.attempt_spawn(TURRET, [18, 12])
             game_state.attempt_upgrade([18, 12])
+
+
+        self.initial_build(game_state)
 
 
 
