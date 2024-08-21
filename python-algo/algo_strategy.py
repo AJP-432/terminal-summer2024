@@ -302,13 +302,15 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
         turrets = [[4, 12], [10, 12], [17, 12], [23, 12]]
         walls = [[4, 13], [10, 13], [17, 13], [23, 13]]
-        game_state.attempt_spawn(TURRET, turrets)
-        # game_state.attempt_upgrade(turrets[0])
-        # game_state.attempt_upgrade(turrets[1])
-        # game_state.attempt_upgrade(turrets[3])
+        # game_state.attempt_spawn(TURRET, turrets)
+        game_state.attempt_upgrade(turrets[0])
+        game_state.attempt_upgrade(turrets[1])
+        game_state.attempt_upgrade(turrets[3])
         game_state.attempt_upgrade(turrets)
         game_state.attempt_spawn(WALL, walls)
-        game_state.attempt_upgrade(walls)
+        game_state.attempt_upgrade(walls[0])
+        game_state.attempt_upgrade(walls[1])
+        game_state.attempt_upgrade(walls[3])
     
         # If we were attacked in the last turn, we know that this turn they cant attack again
         # and that we should rebuild core defense (instead of spending it elsewhere)
@@ -338,14 +340,17 @@ class AlgoStrategy(gamelib.AlgoCore):
         third_turrets = [[11, 12], [16, 12]]
         fourth_turrets = [[2, 13], [25, 13]]
         
-        second_walls = [[3, 13], [24, 13]]
-        third_walls = [[11, 13], [16, 13]]
-        fourth_walls = [[0, 13], [27, 13]]
+        third_walls = [[3, 13], [24, 13]]
+        fourth_walls = [[11, 13], [16, 13]]
+        second_walls = [[0, 13], [27, 13]]
 
         self.initial_build(game_state)
 
         # round 2 bait
-        # if game_state.turn_number == 2:
+        if game_state.turn_number == 2:
+            game_state.attempt_spawn(TURRET, [18, 12])
+            game_state.attempt_upgrade([18, 12])
+
 
 
         for i in range(len(second_turrets)):
