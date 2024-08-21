@@ -29,10 +29,10 @@ class SimUnit:
             self.attackRange = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["attackRange"]
             self.damage_walker = configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["upgrade"]["attackDamageMobile"]
 
-    def color_by_health(self):
-        scaling_factor = self.health / configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["startHealth"]
+    def color_by_health(self, color: tuple[int, int, int] = (255,255,255), health: float = None) -> tuple[int, int, int]:
+        scaling_factor = (health or self.health) / configs["unitInformation"][unit_type_to_index[UnitType(self.unit_type)]]["startHealth"]
         scaling_factor = max(0, min(1, scaling_factor))
-        return (int(255*scaling_factor), int(255*scaling_factor), int(255*scaling_factor))
+        return (int(color[0]*scaling_factor), int(color[1]*scaling_factor), int(color[2]*scaling_factor))
     
     def draw_upgraded(self, xy: tuple[int, int], screen: pygame.display):
         pygame.draw.circle(screen, (255, 255, 0), (12 + xy[0]*25, 50 + 12 + (27-xy[1])*25), 4)
@@ -114,7 +114,7 @@ class SimWalkerStack(SimUnit):
         return self.health[-1]
     
     def draw(self, screen: pygame.display, font: pygame.font.Font):
-        color = (0, 255, 0)
+        color = self.color_by_health((0, 255, 0), self.health[-1])
         center = (12 + self.x*25, 50 + 12 + (27-self.y)*25)
         pygame.draw.circle(screen, color, center, 10)
         

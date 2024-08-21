@@ -29,11 +29,11 @@ class SimGameMap:
                 
                 pygame.draw.circle(screen, color, (12 + x*25, 50 + 12 + y*25), 2)
     
-    def contains_stationary_unit(self, x: int, y: int) -> bool:
+    def contains_stationary_unit(self, xy: tuple[int, int]) -> bool:
         """
         Checks if given location contains a stationary unit (WALL, TURRET, SUPPORT)
         """
-        return self[x,y] and self[x,y].unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]
+        return type(self[xy]) in [SimUnit, SimSupport]
 
     def is_in_bounds(self, x: int, y: int) -> bool:
         """Checks if the given location is inside the diamond shaped game board.
@@ -104,7 +104,7 @@ class SimGameMap:
             x = self.HALF_ARENA + num
             y = num
             bottom_right.append([int(x), int(y)])
-        return [top_right, top_left, bottom_left, bottom_right]
+        return [top_left, top_right, bottom_left, bottom_right]
     
     def distance_between_locations(self, location_1: tuple[int, int], location_2: tuple[int, int]) -> float:
         """Euclidean distance
@@ -175,7 +175,6 @@ class SimGameMap:
             return None
         
         best_target_location = visible_locations[0]
-        # breakpoint()
         for xy in visible_locations: 
             # None or SimUnit/derived classes
             target = self[xy]

@@ -22,7 +22,7 @@ class SimGameState:
         self.all_units = set()
 
         self.game_map = SimGameMap()
-        self.pathfinder = SimShortestPathFinder()
+        self.pathfinder = SimShortestPathFinder(self.game_map)
 
         self.ARENA_SIZE = 28
         self.HALF_ARENA = int(self.ARENA_SIZE / 2)
@@ -158,7 +158,7 @@ class SimGameState:
         for walker_stack in self.walker_stacks:
             start_location = walker_stack.x, walker_stack.y
             edge_squares = self.game_map.get_edge_locations(walker_stack.get_target_edge())
-            path = self.pathfinder.navigate_multiple_endpoints(start_location, edge_squares, self)
+            path = self.pathfinder.navigate_multiple_endpoints(start_location, edge_squares)
             walker_stack.set_path(path)
         
     def get_walkers(self) -> set:
@@ -257,43 +257,43 @@ class SimGameState:
             self.game_map.add_unit(next_step, walker_stack)
 
         # attack
-        units_to_remove = set()
-        any_destoyed = False
-        for fighter in self.get_fighters():
-            # all units in walker stack attack individually. Also works for turrets
-            for _ in range(fighter.unit_count):
-                target = self.game_map.get_best_target(fighter)
-                if not target:
-                    continue
+        # units_to_remove = set()
+        # any_destoyed = False
+        # for fighter in self.get_fighters():
+        #     # all units in walker stack attack individually. Also works for turrets
+        #     for _ in range(fighter.unit_count):
+        #         target = self.game_map.get_best_target(fighter)
+        #         if not target:
+        #             continue
                 
-                target_health = target.inflict_damage(fighter.damage_structure if target.unit_type in self.STRUCTURES else fighter.damage_walker)
-                if target_health <= 0:
-                    if target.unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]:
-                        any_destoyed = True
-                        units_to_remove.add(target)
+        #         target_health = target.inflict_damage(fighter.damage_structure if target.unit_type in self.STRUCTURES else fighter.damage_walker)
+        #         if target_health <= 0:
+        #             if target.unit_type in [UnitType.WALL, UnitType.TURRET, UnitType.SUPPORT]:
+        #                 any_destoyed = True
+        #                 units_to_remove.add(target)
                     
-                    elif target.unit_count <= 0: 
-                        units_to_remove.add(target)
+        #             elif target.unit_count <= 0: 
+        #                 units_to_remove.add(target)
         
-        if any_destoyed:
-            for walker_stack in self.walker_stacks:
-                if walker_stack in units_to_remove:
-                    continue
+        # if any_destoyed:
+        #     for walker_stack in self.walker_stacks:
+        #         if walker_stack in units_to_remove:
+        #             continue
                 
-                # can be optimized 
-                start_location = walker_stack.x, walker_stack.y
-                edge_squares = self.game_map.get_edge_locations(walker_stack.get_target_edge())
-                path = self.pathfinder.navigate_multiple_endpoints(start_location, edge_squares, self.game_state)
-                walker_stack.set_path(path)
+        #         # can be optimized 
+        #         start_location = walker_stack.x, walker_stack.y
+        #         edge_squares = self.game_map.get_edge_locations(walker_stack.get_target_edge())
+        #         path = self.pathfinder.navigate_multiple_endpoints(start_location, edge_squares)
+        #         walker_stack.set_path(path)
 
 
         # remove deleted units
-        for unit in units_to_remove:
-            self.game_map.remove_unit(unit.x, unit.y)
-            self.all_units.remove(unit)
-            if unit.unit_type == UnitType.SUPPORT:
-                self.supports.remove(unit)
-            if unit.unit_type in [UnitType.TURRET, UnitType.SCOUT, UnitType.DEMOLISHER, UnitType.INTERCEPTOR]:
-                self.fighters.remove(unit)
-                if unit.unit_type != UnitType.TURRET:
-                    self.walker_stacks.remove(unit)
+        # for unit in units_to_remove:
+        #     self.game_map.remove_unit(unit.x, unit.y)
+        #     self.all_units.remove(unit)
+        #     if unit.unit_type == UnitType.SUPPORT:
+        #         self.supports.remove(unit)
+        #     if unit.unit_type in [UnitType.TURRET, UnitType.SCOUT, UnitType.DEMOLISHER, UnitType.INTERCEPTOR]:
+        #         self.fighters.remove(unit)
+        #         if unit.unit_type != UnitType.TURRET:
+        #             self.walker_stacks.remove(unit)
